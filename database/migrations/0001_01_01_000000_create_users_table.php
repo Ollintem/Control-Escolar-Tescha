@@ -8,15 +8,25 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     */
+     */ 
+
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
+            $table->id('id_usuario'); // PK INT AI
+            $table->string('nombre', 60);
+            $table->string('apellido_paterno', 40)->nullable();
+            $table->string('apellido_materno', 40)->nullable();
+            $table->string('email', 100)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            
+            // Llave foránea conectada a la tabla roles
+            $table->unsignedTinyInteger('FK_id_rol')->default(1);
+            $table->foreign('FK_id_rol')->references('id_rol')->on('roles')->onDelete('cascade');
+            
+            $table->dateTime('ultimo_acceso')->nullable();
+            $table->unsignedTinyInteger('activo')->default(1);
             $table->rememberToken();
             $table->timestamps();
         });
