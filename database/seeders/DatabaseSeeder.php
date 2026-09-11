@@ -13,11 +13,21 @@ class DatabaseSeeder extends Seeder
     /**
      * Seed the application's database.
      */
-public function run(): void
+    public function run(): void
 {
-    $this->call([
-        // Si ya tenías RoleSeeder o similar, déjalo aquí
-        PermisosSeeder::class,
+    \DB::table('roles')->insert([
+        [
+            'id_rol' => 1,
+            'nombre' => 'Administrador',
+            'descripcion' => 'Control total del sistema',
+            'activo' => 1
+        ],
+        [
+            'id_rol' => 2,
+            'nombre' => 'Usuario',
+            'descripcion' => 'Acceso estándar',
+            'activo' => 1
+        ],
     ]);
 }
 }
