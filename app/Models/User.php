@@ -15,7 +15,7 @@ class User extends Authenticatable
     /**
      * Nombre de la clave primaria personalizada.
      */
-    protected $primaryKey = 'id_usuario';
+    protected $primaryKey = 'id';
 
     /**
      * Los atributos que se pueden asignar masivamente.
