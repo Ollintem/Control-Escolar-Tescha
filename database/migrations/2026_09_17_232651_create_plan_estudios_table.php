@@ -11,21 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('materias', function (Blueprint $table) {
-            $table->id('id_materia'); // PK personalizada
+        Schema::create('plan_estudios', function (Blueprint $table) {
+            $table->id('id_plan_estudio'); // PK personalizada
             
-            // FK a la tabla carreras (debe ser unsignedBigInteger y llamarse id_carrera)
-            $table->unsignedBigInteger('id_carrera');
+            // FK ajustada como unsignedBigInteger para coincidir exactamente con id_carrera en carreras
+            $table->unsignedBigInteger('id_carrera'); 
             
-            $table->string('clave', 20)->unique();
+            $table->string('clave', 30)->unique(); // Ej: ISIC-2010-224
             $table->string('nombre', 100);
-            $table->tinyInteger('creditos');
-            $table->tinyInteger('horas_teoricas')->default(0);
-            $table->tinyInteger('horas_practicas')->default(0);
+            $table->year('anio_publicacion')->nullable();
             $table->boolean('activo')->default(true);
             $table->timestamps();
 
-            // Relación foránea apuntando a 'id_carrera' en la tabla 'carreras'
+            // Definición de la llave foránea
             $table->foreign('id_carrera')
                   ->references('id_carrera')
                   ->on('carreras')
@@ -38,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('materias');
+        Schema::dropIfExists('plan_estudios');
     }
 };

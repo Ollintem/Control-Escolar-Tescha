@@ -1,11 +1,12 @@
 <?php
 
 use App\Http\Controllers\Auth\VerifyEmailController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
 Route::middleware('guest')->group(function () {
-    // RUTA DE REGISTRO DESACTIVADA:
+    // RUTA DE REGISTRO DESACTIVADA (Solo acceso para usuarios existentes):
     // Volt::route('register', 'pages.auth.register')
     //     ->name('register');
 
@@ -29,4 +30,14 @@ Route::middleware('auth')->group(function () {
 
     Volt::route('confirm-password', 'pages.auth.confirm-password')
         ->name('password.confirm');
+
+    // RUTA PARA CERRAR SESIÓN:
+    Route::post('logout', function (\Illuminate\Http\Request $request) {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/login');
+    })->name('logout');
 });

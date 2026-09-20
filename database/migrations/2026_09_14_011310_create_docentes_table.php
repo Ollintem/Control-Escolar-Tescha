@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('docentes', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('rfc', 13)->unique();
-            $table->string('curp', 18)->unique();
-            $table->string('numero_tarjeta', 20)->unique(); // Matrícula o N° de empleado
-            $table->string('titulo_academico')->nullable();  // Ej: Ing., Mtro., Dr.
-            $table->string('telefono', 15)->nullable();
+            $table->id('id_docente'); // PK personalizada para alinearse con 'grupos'
+            $table->string('no_empleado', 20)->unique();
+            $table->string('nombre', 50);
+            $table->string('apellido_paterno', 50);
+            $table->string('apellido_materno', 50)->nullable();
+            $table->string('email', 100)->unique();
+            $table->boolean('activo')->default(true);
             $table->timestamps();
         });
     }

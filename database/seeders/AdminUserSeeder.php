@@ -10,17 +10,16 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Crear usuario admin
         $admin = User::firstOrCreate(
             ['email' => 'admin@tescha.edu.mx'],
             [
                 'name' => 'Administrador General',
-                'password' => Hash::make('admin12345'), // Cambia esta contraseña si gustas
+                'password' => Hash::make('admin12345'),
+                'rol' => 'admin',
                 'activo' => true,
             ]
         );
 
-        // Si usas Spatie Permissions, le asignamos el rol 'admin'
         if (method_exists($admin, 'assignRole')) {
             $admin->assignRole('admin');
         }

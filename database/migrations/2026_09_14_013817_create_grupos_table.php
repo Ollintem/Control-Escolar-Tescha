@@ -6,20 +6,45 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('grupos', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('materia_id')->constrained('materias')->onDelete('cascade');
-            $table->foreignId('docente_id')->constrained('docentes')->onDelete('cascade');
-            $table->foreignId('periodo_escolar_id')->constrained('periodos_escolares')->onDelete('cascade');
-            $table->string('clave_grupo', 10); // Ej: 351-V, A, B
-            $table->integer('capacidad_maxima')->default(30);
-            $table->string('aula', 20)->nullable(); // Ej: CC-1, Aula 12
+            $table->id('id_grupo'); // PK personalizada
+            
+            // FKs ajustadas a la nomenclatura en español y tipo unsignedBigInteger
+            $table->unsignedBigInteger('id_materia');
+            $table->unsignedBigInteger('id_docente')->nullable();
+            $table->unsignedBigInteger('id_periodo');
+            
+            $table->string('nombre', 20); // Ej: 501, 502, 901
+            $table->smallInteger('cupo_maximo')->default(30);
+            $table->boolean('activo')->default(true);
             $table->timestamps();
+
+            // Claves foráneas hacia sus respectivas tablas
+            $table->foreign('id_materia')
+                  ->references('id_materia')
+                  ->on('materias')
+                  ->onDelete('cascade');
+
+            $table->foreign('id_docente')
+                  ->references('id_docente')
+                  ->on('docentes')
+                  ->onDelete('set null');
+
+            $table->foreign('id_periodo')
+                  ->references('id_periodo')
+                  ->on('periodo_escolars')
+                  ->onDelete('cascade');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('grupos');

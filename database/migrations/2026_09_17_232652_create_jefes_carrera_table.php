@@ -11,24 +11,27 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('materias', function (Blueprint $table) {
-            $table->id('id_materia'); // PK personalizada
+        Schema::create('jefes_carrera', function (Blueprint $table) {
+            $table->id('id_jefe_carrera');
             
-            // FK a la tabla carreras (debe ser unsignedBigInteger y llamarse id_carrera)
+            // FKs con tipo unsignedBigInteger alineadas con id_carrera e id_docente
             $table->unsignedBigInteger('id_carrera');
+            $table->unsignedBigInteger('id_docente');
             
-            $table->string('clave', 20)->unique();
-            $table->string('nombre', 100);
-            $table->tinyInteger('creditos');
-            $table->tinyInteger('horas_teoricas')->default(0);
-            $table->tinyInteger('horas_practicas')->default(0);
+            $table->date('fecha_inicio')->nullable();
+            $table->date('fecha_fin')->nullable();
             $table->boolean('activo')->default(true);
             $table->timestamps();
 
-            // Relación foránea apuntando a 'id_carrera' en la tabla 'carreras'
+            // Definición de restricciones de llave foránea
             $table->foreign('id_carrera')
                   ->references('id_carrera')
                   ->on('carreras')
+                  ->onDelete('cascade');
+
+            $table->foreign('id_docente')
+                  ->references('id_docente')
+                  ->on('docentes')
                   ->onDelete('cascade');
         });
     }
@@ -38,6 +41,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('materias');
+        Schema::dropIfExists('jefes_carrera');
     }
 };

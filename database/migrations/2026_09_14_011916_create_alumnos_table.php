@@ -6,21 +6,34 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('alumnos', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('carrera_id')->constrained('carreras')->onDelete('restrict');
-            $table->string('numero_control', 15)->unique(); // Ej: 202610001
-            $table->string('curp', 18)->unique();
-            $table->integer('semestre_actual')->default(1);
-            $table->enum('estatus', ['activo', 'baja_temporal', 'baja_definitiva', 'egresado'])->default('activo');
-            $table->string('telefono', 15)->nullable();
+            $table->id('id_alumno');
+            $table->unsignedBigInteger('id_carrera'); 
+            
+            $table->string('no_control', 20)->unique();
+            $table->string('nombre', 50);
+            $table->string('apellido_paterno', 50);
+            $table->string('apellido_materno', 50)->nullable();
+            $table->string('email', 100)->unique();
+            $table->boolean('activo')->default(true);
             $table->timestamps();
+
+            // Relación foránea corregida hacia 'id_carrera'
+            $table->foreign('id_carrera')
+                  ->references('id_carrera')
+                  ->on('carreras')
+                  ->onDelete('restrict');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('alumnos');

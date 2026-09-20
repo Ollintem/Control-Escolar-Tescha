@@ -1,1237 +1,510 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TESCHA | Panel de Administración General</title>
-
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: #f6f4f2;
-      color: #243044;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-    }
-
-    .shell {
-      display: grid;
-      grid-template-columns: 242px minmax(0, 1fr);
-      min-height: 100vh;
-    }
-
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      padding: 26px 14px 16px;
-      color: #fff;
-      background: linear-gradient(180deg, #56132d, #6d1938);
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      padding: 0 12px 24px;
-      border-bottom: 1px solid rgba(255, 255, 255, .14);
-    }
-
-    .logo-mark {
-      display: grid;
-      place-items: center;
-      width: 42px;
-      height: 42px;
-      border-radius: 13px;
-      color: #f4d894;
-      background: rgba(255, 255, 255, .12);
-    }
-
-    .logo-mark svg { width: 23px; }
-
-    .logo b {
-      display: block;
-      font-size: 17px;
-      letter-spacing: -.03em;
-    }
-
-    .logo span {
-      display: block;
-      margin-top: 2px;
-      color: rgba(255, 255, 255, .58);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .09em;
-    }
-
-    .nav {
-      display: grid;
-      gap: 4px;
-      margin-top: 14px;
-      overflow-y: auto;
-    }
-
-    .nav-title {
-      margin: 14px 12px 7px;
-      color: rgba(255, 255, 255, .46);
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .12em;
-    }
-
-    .nav button {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      gap: 11px;
-      padding: 10px 12px;
-      border: 0;
-      border-radius: 11px;
-      color: rgba(255, 255, 255, .73);
-      background: transparent;
-      cursor: pointer;
-      font: 600 13px inherit;
-      text-align: left;
-      transition: .18s;
-    }
-
-    .nav button svg {
-      width: 18px;
-      height: 18px;
-    }
-
-    .nav button:hover,
-    .nav button.active {
-      color: #fff;
-      background: rgba(255, 255, 255, .12);
-    }
-
-    .nav button.active {
-      box-shadow: inset 3px 0 #e0b664;
-    }
-
-    .account {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: auto;
-      padding: 16px 10px 3px;
-      border-top: 1px solid rgba(255, 255, 255, .14);
-    }
-
-    .avatar {
-      display: grid;
-      place-items: center;
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      color: #fff;
-      background: #8e2449;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .avatar.admin-avatar {
-      background: #c96b00;
-    }
-
-    .account b,
-    .account span {
-      display: block;
-      max-width: 145px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .account b { font-size: 12px; }
-
-    .account span {
-      margin-top: 2px;
-      color: rgba(255, 255, 255, .57);
-      font-size: 11px;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      height: 74px;
-      padding: 0 30px;
-      border-bottom: 1px solid #e9e5e2;
-      background: #fff;
-    }
-
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      color: #8993a4;
-      font-size: 13px;
-    }
-
-    .breadcrumb b { color: #691936; }
-
-    .breadcrumb i {
-      color: #c1c6cf;
-      font-style: normal;
-    }
-
-    .user {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-    }
-
-    .role-badge {
-      padding: 3px 8px;
-      border-radius: 6px;
-      color: #691936;
-      background: #fce8ef;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .05em;
-    }
-
-    .notify {
-      display: grid;
-      place-items: center;
-      position: relative;
-      width: 36px;
-      height: 36px;
-      border: 0;
-      color: #677287;
-      background: transparent;
-      cursor: pointer;
-    }
-
-    .notify::after {
-      content: "";
-      position: absolute;
-      top: 8px;
-      right: 7px;
-      width: 7px;
-      height: 7px;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      background: #92264b;
-    }
-
-    .notify svg { width: 20px; }
-
-    .user .avatar {
-      width: 38px;
-      height: 38px;
-    }
-
-    .user-info b {
-      display: block;
-      font-size: 13px;
-    }
-
-    .user-info span {
-      display: block;
-      margin-top: 2px;
-      color: #8a94a6;
-      font-size: 11px;
-    }
-
-    .content { padding: 32px; }
-
-    .content h1 {
-      margin: 0;
-      color: #202b3d;
-      font-size: 29px;
-      letter-spacing: -.045em;
-    }
-
-    .welcome {
-      margin: 6px 0 27px;
-      color: #748095;
-      font-size: 14px;
-    }
-
-    .period {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      padding: 20px 24px;
-      border-radius: 17px;
-      color: #fff;
-      background: linear-gradient(100deg, #5b1330, #791e41);
-      box-shadow: 0 12px 25px rgba(92, 19, 48, .16);
-    }
-
-    .period-left {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .period-icon {
-      display: grid;
-      place-items: center;
-      width: 48px;
-      height: 48px;
-      border-radius: 13px;
-      color: #f5d891;
-      background: rgba(255, 255, 255, .13);
-    }
-
-    .period-icon svg { width: 23px; }
-
-    .period-label {
-      color: rgba(255, 255, 255, .64);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .08em;
-    }
-
-    .period strong {
-      display: block;
-      margin-top: 4px;
-      font-size: 20px;
-      letter-spacing: -.03em;
-    }
-
-    .period-meta {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .weeks {
-      min-width: 130px;
-      padding: 9px 14px;
-      border-radius: 11px;
-      background: rgba(255, 255, 255, .13);
-      text-align: center;
-    }
-
-    .weeks b { font-size: 16px; }
-
-    .weeks span {
-      display: block;
-      margin-top: 1px;
-      color: rgba(255, 255, 255, .65);
-      font-size: 11px;
-    }
-
-    .status {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 10px 13px;
-      border-radius: 999px;
-      color: #73f0ae;
-      background: rgba(33, 196, 121, .18);
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .status i {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #36dd88;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 16px;
-      margin-top: 22px;
-    }
-
-    .stat {
-      padding: 19px;
-      border: 1px solid #ece9e6;
-      border-radius: 16px;
-      background: #fff;
-      box-shadow: 0 5px 13px rgba(31, 38, 50, .045);
-    }
-
-    .stat-icon {
-      display: grid;
-      place-items: center;
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
-    }
-
-    .stat-icon svg { width: 20px; }
-
-    .burgundy { color: #8c2448; background: #f8edf1; }
-    .blue { color: #2563eb; background: #edf4ff; }
-    .gold { color: #c96b00; background: #fff8e7; }
-    .green { color: #009e4f; background: #eafaf1; }
-
-    .stat b {
-      display: block;
-      margin-top: 19px;
-      color: #172033;
-      font-size: 29px;
-      letter-spacing: -.06em;
-    }
-
-    .stat strong {
-      display: block;
-      margin-top: 4px;
-      color: #657187;
-      font-size: 14px;
-    }
-
-    .stat span {
-      display: block;
-      margin-top: 7px;
-      color: #9ba5b5;
-      font-size: 11px;
-    }
-
-    .section {
-      margin-top: 22px;
-      padding: 23px;
-      border: 1px solid #ece9e6;
-      border-radius: 17px;
-      background: #fff;
-      box-shadow: 0 5px 13px rgba(31, 38, 50, .04);
-    }
-
-    .section h2,
-    .panel-head h2 {
-      margin: 0;
-      color: #293448;
-      font-size: 17px;
-    }
-
-    .quick {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 17px;
-    }
-
-    .action {
-      min-height: 124px;
-      padding: 16px;
-      border: 1px solid #f0eeec;
-      border-radius: 13px;
-      color: #253146;
-      background: #fff;
-      cursor: pointer;
-      font: inherit;
-      text-align: center;
-    }
-
-    .action:hover {
-      border-color: #ddc3cd;
-      background: #fffafa;
-    }
-
-    .action-icon {
-      display: grid;
-      place-items: center;
-      width: 42px;
-      height: 42px;
-      margin: 0 auto 12px;
-      border-radius: 12px;
-    }
-
-    .action-icon svg { width: 21px; }
-
-    .action b {
-      display: block;
-      font-size: 13px;
-    }
-
-    .action span {
-      display: block;
-      margin-top: 4px;
-      color: #929cad;
-      font-size: 11px;
-    }
-
-    .bottom {
-      display: grid;
-      grid-template-columns: 1.45fr .95fr;
-      gap: 20px;
-      margin-top: 22px;
-    }
-
-    .feed,
-    .careers {
-      overflow: hidden;
-      border: 1px solid #ece9e6;
-      border-radius: 17px;
-      background: #fff;
-      box-shadow: 0 5px 13px rgba(31, 38, 50, .04);
-    }
-
-    .panel-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 21px 23px;
-      border-bottom: 1px solid #f1efed;
-    }
-
-    .panel-head a {
-      color: #8b2346;
-      font-size: 12px;
-      font-weight: 800;
-      text-decoration: none;
-    }
-
-    .event {
-      display: grid;
-      grid-template-columns: 42px 1fr auto;
-      gap: 12px;
-      align-items: center;
-      padding: 16px 23px;
-      border-bottom: 1px solid #f6f4f2;
-    }
-
-    .event:last-child { border-bottom: 0; }
-
-    .event-icon {
-      display: grid;
-      place-items: center;
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-    }
-
-    .event-icon svg { width: 18px; }
-
-    .event b {
-      display: block;
-      color: #283449;
-      font-size: 13px;
-    }
-
-    .event span {
-      display: block;
-      margin-top: 3px;
-      color: #929cad;
-      font-size: 11px;
-    }
-
-    .time {
-      color: #98a2b2;
-      font-size: 11px;
-      text-align: right;
-      white-space: nowrap;
-    }
-
-    .career {
-      padding: 15px 23px;
-      border-bottom: 1px solid #f6f4f2;
-    }
-
-    .career-top {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
-
-    .code {
-      padding: 4px 6px;
-      border-radius: 5px;
-      color: #fff;
-      background: #8b2346;
-      font-size: 10px;
-      font-weight: 800;
-    }
-
-    .career-name {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      color: #354156;
-      font-size: 12px;
-      font-weight: 700;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .arrow {
-      color: #8b2346;
-      font-size: 16px;
-      font-weight: 800;
-    }
-
-    .career-foot {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 7px;
-      color: #98a2b2;
-      font-size: 10px;
-    }
-
-    .total {
-      display: flex;
-      justify-content: space-between;
-      padding: 17px 23px;
-      color: #748095;
-      background: #fafafa;
-      font-size: 12px;
-    }
-
-    .total b { color: #2a3548; }
-
-    /* ESTILOS DE LA MATRIZ DE PERMISOS */
-    .view-panel { display: block; }
-    .view-panel.hidden { display: none; }
-
-    .matrix-card {
-      margin-top: 20px;
-      padding: 24px;
-      border: 1px solid #ece9e6;
-      border-radius: 17px;
-      background: #fff;
-      box-shadow: 0 5px 13px rgba(31, 38, 50, .04);
-    }
-
-    .matrix-header-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      gap: 16px;
-    }
-
-    .btn-save {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      border: 0;
-      border-radius: 10px;
-      color: #fff;
-      background: #8b2346;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background .2s;
-    }
-
-    .btn-save:hover {
-      background: #6d1938;
-    }
-
-    .table-responsive {
-      overflow-x: auto;
-    }
-
-    .matrix-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 13px;
-    }
-
-    .matrix-table th {
-      padding: 14px 16px;
-      border-bottom: 2px solid #e9e5e2;
-      color: #56132d;
-      background: #fcfaf9;
-      font-weight: 800;
-      text-transform: uppercase;
-      font-size: 11px;
-      letter-spacing: .05em;
-    }
-
-    .matrix-table td {
-      padding: 14px 16px;
-      border-bottom: 1px solid #f1efed;
-      color: #354156;
-    }
-
-    .matrix-table tbody tr:hover {
-      background: #faf8f7;
-    }
-
-    .matrix-table input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: #8b2346;
-      cursor: pointer;
-    }
-
-    .text-center { text-align: center; }
-
-    @media (max-width: 850px) {
-      .shell { grid-template-columns: 72px minmax(0, 1fr); }
-
-      .sidebar { padding: 20px 9px; }
-
-      .logo {
-        justify-content: center;
-        padding: 0 0 20px;
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TESCHA | Panel de Administración General</title>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'] },
+        colors: {
+          brand: { 50: '#fce8ef', 100: '#f8edf1', 400: '#8c2448', 500: '#8b2346', 600: '#791e41', 700: '#6d1938', 800: '#56132d' },
+          gold:  { 300: '#f5d891', 400: '#f4d894', 500: '#c96b00' },
+          cream: '#f6f4f2',
+          ink:   '#243044'
+        },
+        keyframes: {
+          modalIn: { '0%': { opacity: 0, transform: 'translateY(8px) scale(.985)' }, '100%': { opacity: 1, transform: 'translateY(0) scale(1)' } },
+          toastIn: { '0%': { opacity: 0, transform: 'translateY(10px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } }
+        },
+        animation: {
+          modalIn: 'modalIn .18s ease-out',
+          toastIn: 'toastIn .2s ease-out'
+        }
       }
-
-      .logo > div:not(.logo-mark),
-      .nav-title,
-      .nav button span,
-      .account > div:not(.avatar) {
-        display: none;
-      }
-
-      .nav button {
-        justify-content: center;
-        padding: 11px;
-      }
-
-      .account {
-        justify-content: center;
-        padding: 15px 0 0;
-      }
-
-      .header,
-      .content {
-        padding-left: 22px;
-        padding-right: 22px;
-      }
-
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .quick { grid-template-columns: repeat(2, 1fr); }
-      .bottom { grid-template-columns: 1fr; }
     }
+  }
+</script>
 
-    @media (max-width: 580px) {
-      .shell { display: block; }
-      .sidebar { display: none; }
-
-      .header {
-        height: 62px;
-        padding: 0 16px;
-      }
-
-      .content { padding: 22px 16px; }
-      .user-info { display: none; }
-
-      .content h1 { font-size: 25px; }
-      .welcome { font-size: 12px; }
-
-      .period {
-        align-items: flex-start;
-        padding: 18px;
-      }
-
-      .period-meta { display: none; }
-      .period strong { font-size: 17px; }
-
-      .stats {
-        gap: 10px;
-        margin-top: 14px;
-      }
-
-      .stat { padding: 14px; }
-      .stat b {
-        margin-top: 12px;
-        font-size: 24px;
-      }
-
-      .section {
-        margin-top: 14px;
-        padding: 17px;
-      }
-
-      .quick {
-        gap: 8px;
-        margin-top: 13px;
-      }
-
-      .action {
-        min-height: 110px;
-        padding: 12px 7px;
-      }
-
-      .bottom {
-        gap: 14px;
-        margin-top: 14px;
-      }
-
-      .event {
-        grid-template-columns: 38px 1fr;
-        padding: 14px 16px;
-      }
-
-      .time { display: none; }
-      .panel-head { padding: 17px; }
-      .career { padding: 14px 17px; }
-    }
-  </style>
+<style>
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #d9dde3; border-radius: 999px; }
+  input[type="checkbox"] { accent-color: #8b2346; }
+</style>
 </head>
 
-<body>
-  <div class="shell">
+<body class="m-0 bg-cream text-ink font-sans">
+  <div id="app-shell" class="grid grid-cols-1 md:grid-cols-[242px_minmax(0,1fr)] min-h-screen">
 
-    <aside class="sidebar">
-      <div class="logo">
-        <div class="logo-mark">
-          <i data-lucide="shield-check"></i>
+    <!-- overlay para sidebar móvil -->
+    <div id="sidebar-overlay" class="hidden fixed inset-0 bg-black/40 z-40 md:hidden"></div>
+
+    <aside id="sidebar"
+      class="fixed md:static z-50 md:z-auto -translate-x-full md:translate-x-0 transition-transform duration-200 w-[242px] h-full md:h-auto flex flex-col px-3.5 pt-6 pb-4 text-white bg-gradient-to-b from-brand-800 to-brand-700">
+
+      <div class="flex items-center gap-3 px-3 pb-6 border-b border-white/10">
+        <div class="grid place-items-center w-[42px] h-[42px] rounded-[13px] text-gold-400 bg-white/10">
+          <i data-lucide="shield-check" class="w-[23px]"></i>
         </div>
-
         <div>
-          <b>TESCHA</b>
-          <span>ADMINISTRACIÓN</span>
+          <b class="block text-[17px] tracking-tight">TESCHA</b>
+          <span class="block mt-0.5 text-white/60 text-[10px] font-bold tracking-[.09em]">ADMINISTRACIÓN</span>
         </div>
+        <button id="sidebar-close" class="ml-auto md:hidden text-white/70 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
       </div>
 
-      <nav class="nav">
-        <p class="nav-title">PANEL DE CONTROL</p>
+      <nav class="grid gap-1 mt-3.5 overflow-y-auto">
+        <p class="mx-3 mt-3.5 mb-1.5 text-white/45 text-[10px] font-extrabold tracking-[.12em]">PANEL DE CONTROL</p>
 
-        <button class="active" id="btn-dashboard">
-          <i data-lucide="layout-dashboard"></i>
+        <button data-nav id="btn-dashboard" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white bg-white/10 border-l-[3px] border-gold-300 font-semibold text-[13px] text-left transition-all duration-200 hover:bg-white/15 hover:translate-x-0.5">
+          <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]"></i>
           <span>Dashboard Admin</span>
         </button>
 
-        <p class="nav-title">ADMINISTRACIÓN SISTEMA</p>
+        <p class="mx-3 mt-3.5 mb-1.5 text-white/45 text-[10px] font-extrabold tracking-[.12em]">ADMINISTRACIÓN SISTEMA</p>
 
-        <button>
-          <i data-lucide="users"></i>
+        <button data-nav id="btn-roles" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="users" class="w-[18px] h-[18px]"></i>
           <span>Usuarios y Roles</span>
         </button>
 
-        <!-- MÓDULO PERMISOS AGREGADO -->
-        <button id="btn-permisos">
-          <i data-lucide="shield-lock"></i>
+        <button data-nav id="btn-permisos" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="shield-half" class="w-[18px] h-[18px]"></i>
           <span>Módulo Permisos</span>
         </button>
 
-        <button>
-          <i data-lucide="user-cog"></i>
+        <button data-toast="Docentes" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="user-cog" class="w-[18px] h-[18px]"></i>
           <span>Docentes</span>
         </button>
 
-        <!-- JEFES DE CARRERA AGREGADO -->
-        <button id="btn-jefes">
-          <i data-lucide="award"></i>
+        <button data-toast="Jefes de Carrera" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="award" class="w-[18px] h-[18px]"></i>
           <span>Jefes de Carrera</span>
         </button>
 
-        <!-- CONTROL ESCOLAR AGREGADO -->
-        <button id="btn-control-escolar">
-          <i data-lucide="graduation-cap"></i>
+        <button data-toast="Control Escolar" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="graduation-cap" class="w-[18px] h-[18px]"></i>
           <span>Control Escolar</span>
         </button>
 
-        <button>
-          <i data-lucide="settings"></i>
+        <button data-toast="Configuración del sistema" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="settings" class="w-[18px] h-[18px]"></i>
           <span>Configuración Sistema</span>
         </button>
 
-        <p class="nav-title">GESTIÓN ACADÉMICA</p>
+        <p class="mx-3 mt-3.5 mb-1.5 text-white/45 text-[10px] font-extrabold tracking-[.12em]">GESTIÓN ACADÉMICA</p>
 
-        <button>
-          <i data-lucide="landmark"></i>
+        <button data-toast="Carreras" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="landmark" class="w-[18px] h-[18px]"></i>
           <span>Carreras</span>
         </button>
 
-        <button>
-          <i data-lucide="calendar-days"></i>
+        <button data-toast="Semestres / Periodos" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="calendar-days" class="w-[18px] h-[18px]"></i>
           <span>Semestres / Periodos</span>
         </button>
 
-        <button>
-          <i data-lucide="book-open"></i>
+        <button data-toast="Materias y Plan" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="book-open" class="w-[18px] h-[18px]"></i>
           <span>Materias y Plan</span>
         </button>
 
-        <button>
-          <i data-lucide="users-round"></i>
+        <button data-toast="Alumnos" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="users-round" class="w-[18px] h-[18px]"></i>
           <span>Alumnos</span>
         </button>
 
-        <button>
-          <i data-lucide="grid-2x2"></i>
+        <button data-toast="Grupos" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="grid-2x2" class="w-[18px] h-[18px]"></i>
           <span>Grupos</span>
         </button>
 
-        <p class="nav-title">REPORTES Y AUDITORÍA</p>
+        <p class="mx-3 mt-3.5 mb-1.5 text-white/45 text-[10px] font-extrabold tracking-[.12em]">REPORTES Y AUDITORÍA</p>
 
-        <button>
-          <i data-lucide="history"></i>
+        <button data-toast="Bitácora / Logs" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="history" class="w-[18px] h-[18px]"></i>
           <span>Bitácora / Logs</span>
         </button>
 
-        <button>
-          <i data-lucide="file-spreadsheets"></i>
+        <button data-toast="Reportes General" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="file-spreadsheet" class="w-[18px] h-[18px]"></i>
           <span>Reportes General</span>
         </button>
       </nav>
 
-      <div class="account">
-        <div class="avatar admin-avatar">AD</div>
-
-        <div>
-          <b>Administrador</b>
-          <span>SuperAdmin · TESCHA</span>
+      <div class="mt-auto pt-4 px-2.5 border-t border-white/10">
+        <div class="flex items-center gap-2.5">
+          <div class="grid place-items-center w-[34px] h-[34px] rounded-full text-white bg-gold-500 text-xs font-extrabold">AD</div>
+          <div class="min-w-0">
+            <b class="block text-xs truncate max-w-[145px]">{{ Auth::user()->name ?? 'Administrador' }}</b>
+            <span class="block mt-0.5 text-white/55 text-[11px] truncate max-w-[145px]">SuperAdmin · TESCHA</span>
+          </div>
         </div>
+
+        <!-- Formulario POST para Cerrar Sesión (Sidebar) -->
+        <form method="POST" action="{{ route('logout') }}" class="w-full">
+          @csrf
+          <button type="submit" id="btn-logout"
+            class="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-white/15 text-white/85 text-[12px] font-bold transition-all duration-200 hover:bg-red-500/20 hover:border-red-300/40 hover:text-white hover:-translate-y-0.5">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            Cerrar sesión
+          </button>
+        </form>
       </div>
     </aside>
 
-    <div>
-      <header class="header">
-        <div class="breadcrumb">
-          <span>TESCHA</span>
-          <i>›</i>
-          <b id="breadcrumb-title">Administración General</b>
+    <div class="min-w-0">
+      <header class="flex items-center justify-between gap-4 h-[74px] px-5 md:px-7.5 border-b border-[#e9e5e2] bg-white sticky top-0 z-30">
+        <div class="flex items-center gap-2.5">
+          <button id="sidebar-open" class="md:hidden grid place-items-center w-9 h-9 rounded-lg text-[#677287] hover:bg-black/5">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          <div class="flex items-center gap-2 text-[#8993a4] text-[13px]">
+            <span class="hidden sm:inline">TESCHA</span>
+            <i class="hidden sm:inline text-[#c1c6cf] not-italic">›</i>
+            <b id="breadcrumb-title" class="text-brand-700">Administración General</b>
+          </div>
         </div>
 
-        <div class="user">
-          <span class="role-badge">SUPERADMIN</span>
+        <div class="flex items-center gap-3">
+          <span class="hidden sm:inline-block px-2 py-1 rounded-md text-brand-700 bg-brand-100 text-[10px] font-extrabold tracking-[.05em]">SUPERADMIN</span>
 
-          <button class="notify">
-            <i data-lucide="bell"></i>
+          <button data-toast="Notificaciones" class="relative grid place-items-center w-9 h-9 rounded-full text-[#677287] hover:bg-black/5 transition-all duration-200 hover:scale-110">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span class="absolute top-2 right-2 w-[7px] h-[7px] rounded-full bg-brand-500 ring-2 ring-white"></span>
           </button>
 
-          <div class="avatar admin-avatar">AD</div>
+          <div class="grid place-items-center w-[38px] h-[38px] rounded-full text-white bg-gold-500 text-xs font-extrabold">AD</div>
 
-          <div class="user-info">
-            <b>Admin Sistema</b>
-            <span>Control Escolar</span>
+          <div class="hidden md:block">
+            <b class="block text-[13px]">{{ Auth::user()->name ?? 'Admin Sistema' }}</b>
+            <span class="block mt-0.5 text-[#8a94a6] text-[11px]">Control Escolar</span>
           </div>
+
+          <!-- Formulario POST para Cerrar Sesión (Header) -->
+          <form method="POST" action="{{ route('logout') }}" class="hidden md:block">
+            @csrf
+            <button type="submit" id="btn-logout-header" title="Cerrar sesión"
+              class="grid place-items-center w-9 h-9 rounded-full text-[#677287] transition-all duration-200 hover:bg-brand-50 hover:text-brand-600 hover:scale-110">
+              <i data-lucide="log-out" class="w-[18px] h-[18px]"></i>
+            </button>
+          </form>
         </div>
       </header>
 
-      <main class="content">
+      <main class="p-5 md:p-8">
 
         <!-- VISTA DASHBOARD PRINCIPAL -->
         <div id="view-dashboard" class="view-panel">
-          <h1>Panel de Administración General</h1>
+          <h1 class="m-0 text-[#202b3d] text-[26px] md:text-[29px] tracking-tight">Panel de Administración General</h1>
+          <p class="mt-1.5 mb-6 text-[#748095] text-sm">Bienvenido, {{ Auth::user()->name ?? 'Administrador del Sistema' }} · {{ \Carbon\Carbon::now()->isoFormat('D [de] MMMM [de] YYYY') }}</p>
 
-          <p class="welcome">
-            Bienvenido, Administrador del Sistema · martes, 15 de septiembre de 2026
-          </p>
-
-          <section class="period">
-            <div class="period-left">
-              <div class="period-icon">
-                <i data-lucide="shield-alert"></i>
+          <section class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-[17px] text-white bg-gradient-to-r from-brand-800 to-brand-700 shadow-[0_12px_25px_rgba(92,19,48,.16)]">
+            <div class="flex items-center gap-4">
+              <div class="grid place-items-center w-12 h-12 rounded-[13px] text-gold-300 bg-white/15">
+                <i data-lucide="shield-alert" class="w-[23px]"></i>
               </div>
-
               <div>
-                <span class="period-label">ESTADO DEL SISTEMA</span>
-                <strong>Servidores y Servicios Operativos</strong>
+                <span class="text-white/65 text-[11px] font-extrabold tracking-[.08em]">ESTADO DEL SISTEMA</span>
+                <strong class="block mt-1 text-lg md:text-xl tracking-tight">Servidores y Servicios Operativos</strong>
               </div>
             </div>
 
-            <div class="period-meta">
-              <div class="weeks">
-                <b>2026-2</b>
-                <span>Periodo Activo</span>
+            <div class="hidden sm:flex items-center gap-3.5">
+              <div class="min-w-[130px] py-2 px-3.5 rounded-xl bg-white/15 text-center">
+                <b class="text-base">2026-2</b>
+                <span class="block mt-0.5 text-white/65 text-[11px]">Periodo Activo</span>
               </div>
-
-              <span class="status">
-                <i></i>
+              <span class="flex items-center gap-1.5 py-2.5 px-3 rounded-full text-emerald-300 bg-emerald-400/20 text-xs font-extrabold">
+                <i class="w-[7px] h-[7px] rounded-full bg-emerald-400 inline-block"></i>
                 Sistema 100% Ok
               </span>
             </div>
           </section>
 
-          <section class="stats">
-            <article class="stat">
-              <div class="stat-icon burgundy">
-                <i data-lucide="users"></i>
-              </div>
+          <section id="stats" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-5"></section>
 
-              <b>842</b>
-              <strong>Total de Usuarios</strong>
-              <span>779 Alumnos · 63 Staff/Doc.</span>
-            </article>
+          <section class="mt-5 p-5 rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.04)]">
+            <h2 class="m-0 text-[#293448] text-[17px]">Acciones rápidas de Administración</h2>
 
-            <article class="stat">
-              <div class="stat-icon blue">
-                <i data-lucide="graduation-cap"></i>
-              </div>
-
-              <b>60</b>
-              <strong>Docentes Activos</strong>
-              <span>Planta académica asignada</span>
-            </article>
-
-            <article class="stat">
-              <div class="stat-icon gold">
-                <i data-lucide="landmark"></i>
-              </div>
-
-              <b>6</b>
-              <strong>Carreras Registradas</strong>
-              <span>Oferta educativa activa</span>
-            </article>
-
-            <article class="stat">
-              <div class="stat-icon green">
-                <i data-lucide="shield-check"></i>
-              </div>
-
-              <b>100%</b>
-              <strong>Permisos / ROL</strong>
-              <span>Acceso Total Administrador</span>
-            </article>
-          </section>
-
-          <section class="section">
-            <h2>Acciones rápidas de Administración</h2>
-
-            <div class="quick">
-              <button class="action">
-                <i class="action-icon burgundy" data-lucide="user-plus"></i>
-                <b>Crear Usuario</b>
-                <span>Alta de Admin/Docente</span>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+              <button data-toast="Crear Usuario" class="quick-action min-h-[124px] p-4 rounded-[13px] border border-[#f0eeec] bg-white text-[#253146] text-center transition-all duration-200 hover:border-[#ddc3cd] hover:bg-[#fffafa] hover:-translate-y-1 hover:shadow-lg">
+                <i class="grid place-items-center w-[42px] h-[42px] mx-auto mb-3 rounded-xl text-brand-500 bg-brand-100" data-lucide="user-plus"></i>
+                <b class="block text-[13px]">Crear Usuario</b>
+                <span class="block mt-1 text-[#929cad] text-[11px]">Alta de Admin/Docente</span>
               </button>
 
-              <button class="action">
-                <i class="action-icon blue" data-lucide="calendar-plus"></i>
-                <b>Nuevo Periodo</b>
-                <span>Configurar ciclo escolar</span>
+              <button data-toast="Nuevo Periodo" class="quick-action min-h-[124px] p-4 rounded-[13px] border border-[#f0eeec] bg-white text-[#253146] text-center transition-all duration-200 hover:border-[#ddc3cd] hover:bg-[#fffafa] hover:-translate-y-1 hover:shadow-lg">
+                <i class="grid place-items-center w-[42px] h-[42px] mx-auto mb-3 rounded-xl text-blue-600 bg-blue-50" data-lucide="calendar-plus"></i>
+                <b class="block text-[13px]">Nuevo Periodo</b>
+                <span class="block mt-1 text-[#929cad] text-[11px]">Configurar ciclo escolar</span>
               </button>
 
-              <button class="action" onclick="showPermisosView()">
-                <i class="action-icon gold" data-lucide="key-round"></i>
-                <b>Gestión de Roles</b>
-                <span>Permisos de usuarios</span>
+              <button onclick="showRolesView()" class="quick-action min-h-[124px] p-4 rounded-[13px] border border-[#f0eeec] bg-white text-[#253146] text-center transition-all duration-200 hover:border-[#ddc3cd] hover:bg-[#fffafa] hover:-translate-y-1 hover:shadow-lg">
+                <i class="grid place-items-center w-[42px] h-[42px] mx-auto mb-3 rounded-xl text-gold-500 bg-amber-50" data-lucide="key-round"></i>
+                <b class="block text-[13px]">Gestión de Roles</b>
+                <span class="block mt-1 text-[#929cad] text-[11px]">Permisos de usuarios</span>
               </button>
 
-              <button class="action">
-                <i class="action-icon green" data-lucide="database-backup"></i>
-                <b>Respaldos / Logs</b>
-                <span>Ver bitácora de sistema</span>
+              <button data-toast="Respaldos / Logs" class="quick-action min-h-[124px] p-4 rounded-[13px] border border-[#f0eeec] bg-white text-[#253146] text-center transition-all duration-200 hover:border-[#ddc3cd] hover:bg-[#fffafa] hover:-translate-y-1 hover:shadow-lg">
+                <i class="grid place-items-center w-[42px] h-[42px] mx-auto mb-3 rounded-xl text-emerald-600 bg-emerald-50" data-lucide="database-backup"></i>
+                <b class="block text-[13px]">Respaldos / Logs</b>
+                <span class="block mt-1 text-[#929cad] text-[11px]">Ver bitácora de sistema</span>
               </button>
             </div>
           </section>
 
-          <section class="bottom">
-            <article class="feed">
-              <div class="panel-head">
-                <h2>Bitácora del Sistema (Actividad General)</h2>
+          <section class="grid grid-cols-1 lg:grid-cols-[1.45fr_.95fr] gap-5 mt-5">
+            <article class="overflow-hidden rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.04)]">
+              <div class="flex items-center justify-between px-5 py-5 border-b border-[#f1efed]">
+                <h2 class="m-0 text-[#293448] text-base">Bitácora del Sistema (Actividad General)</h2>
               </div>
 
-              <div class="event">
-                <div class="event-icon burgundy">
-                  <i data-lucide="key"></i>
-                </div>
-
+              <div class="grid grid-cols-[38px_1fr] sm:grid-cols-[42px_1fr_auto] gap-3 items-center px-5 py-4 border-b border-cream">
+                <div class="grid place-items-center w-[38px] h-[38px] rounded-[10px] text-brand-500 bg-brand-100"><i data-lucide="key" class="w-[18px]"></i></div>
                 <div>
-                  <b>Cambio de permisos — Docente Ramírez</b>
-                  <span>Asignación de rol de captura de actas</span>
+                  <b class="block text-[#283449] text-[13px]">Cambio de permisos — Docente Ramírez</b>
+                  <span class="block mt-0.5 text-[#929cad] text-[11px]">Asignación de rol de captura de actas</span>
                 </div>
-
-                <div class="time">Hoy 09:30<br>SuperAdmin</div>
+                <div class="hidden sm:block text-[#98a2b2] text-[11px] text-right whitespace-nowrap">Hoy 09:30<br>SuperAdmin</div>
               </div>
 
-              <div class="event">
-                <div class="event-icon gold">
-                  <i data-lucide="database"></i>
-                </div>
-
+              <div class="grid grid-cols-[38px_1fr] sm:grid-cols-[42px_1fr_auto] gap-3 items-center px-5 py-4 border-b border-cream">
+                <div class="grid place-items-center w-[38px] h-[38px] rounded-[10px] text-gold-500 bg-amber-50"><i data-lucide="database" class="w-[18px]"></i></div>
                 <div>
-                  <b>Cierre de Actas Parcial 3 — ISC</b>
-                  <span>Proceso del sistema automatizado</span>
+                  <b class="block text-[#283449] text-[13px]">Cierre de Actas Parcial 3 — ISC</b>
+                  <span class="block mt-0.5 text-[#929cad] text-[11px]">Proceso del sistema automatizado</span>
                 </div>
-
-                <div class="time">Hoy 08:50<br>Sistema</div>
+                <div class="hidden sm:block text-[#98a2b2] text-[11px] text-right whitespace-nowrap">Hoy 08:50<br>Sistema</div>
               </div>
 
-              <div class="event">
-                <div class="event-icon blue">
-                  <i data-lucide="user-check"></i>
-                </div>
-
+              <div class="grid grid-cols-[38px_1fr] sm:grid-cols-[42px_1fr_auto] gap-3 items-center px-5 py-4 border-b border-cream">
+                <div class="grid place-items-center w-[38px] h-[38px] rounded-[10px] text-blue-600 bg-blue-50"><i data-lucide="user-check" class="w-[18px]"></i></div>
                 <div>
-                  <b>Usuario Docente Registrado — Ing. Carlos Mendoza</b>
-                  <span>Departamento de Sistemas</span>
+                  <b class="block text-[#283449] text-[13px]">Usuario Docente Registrado — Ing. Carlos Mendoza</b>
+                  <span class="block mt-0.5 text-[#929cad] text-[11px]">Departamento de Sistemas</span>
                 </div>
-
-                <div class="time">Ayer 16:22<br>SuperAdmin</div>
+                <div class="hidden sm:block text-[#98a2b2] text-[11px] text-right whitespace-nowrap">Ayer 16:22<br>SuperAdmin</div>
               </div>
 
-              <div class="event">
-                <div class="event-icon green">
-                  <i data-lucide="settings-2"></i>
-                </div>
-
+              <div class="grid grid-cols-[38px_1fr] sm:grid-cols-[42px_1fr_auto] gap-3 items-center px-5 py-4">
+                <div class="grid place-items-center w-[38px] h-[38px] rounded-[10px] text-emerald-600 bg-emerald-50"><i data-lucide="settings-2" class="w-[18px]"></i></div>
                 <div>
-                  <b>Apertura de Periodo Escolar — 2026-2</b>
-                  <span>Parámetros globales actualizados</span>
+                  <b class="block text-[#283449] text-[13px]">Apertura de Periodo Escolar — 2026-2</b>
+                  <span class="block mt-0.5 text-[#929cad] text-[11px]">Parámetros globales actualizados</span>
                 </div>
-
-                <div class="time">Ayer 11:30<br>SuperAdmin</div>
+                <div class="hidden sm:block text-[#98a2b2] text-[11px] text-right whitespace-nowrap">Ayer 11:30<br>SuperAdmin</div>
               </div>
             </article>
 
-            <article class="careers">
-              <div class="panel-head">
-                <h2>Carreras Activas</h2>
-                <a href="#">Gestionar →</a>
+            <article class="overflow-hidden rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.04)]">
+              <div class="flex items-center justify-between px-5 py-5 border-b border-[#f1efed]">
+                <h2 class="m-0 text-[#293448] text-base">Carreras Activas</h2>
+                <a href="#" data-toast="Gestión de carreras" class="text-brand-600 text-xs font-extrabold no-underline hover:text-brand-800">Gestionar →</a>
               </div>
 
-              <div class="career">
-                <div class="career-top">
-                  <span class="code">IM</span>
-                  <span class="career-name">Ingeniería Electromecánica</span>
-                  <span class="arrow">›</span>
+              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería Electromecánica">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">IM</span>
+                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería Electromecánica</span>
+                  <span class="text-brand-500 text-base font-extrabold">›</span>
                 </div>
-                <div class="career-foot">
-                  <span>Configuración de retícula</span>
-                  <span>Editar</span>
-                </div>
-              </div>
-
-              <div class="career">
-                <div class="career-top">
-                  <span class="code">IE</span>
-                  <span class="career-name">Ingeniería Electrónica</span>
-                  <span class="arrow">›</span>
-                </div>
-                <div class="career-foot">
-                  <span>Configuración de retícula</span>
-                  <span>Editar</span>
+                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
+                  <span>Configuración de retícula</span><span>Editar</span>
                 </div>
               </div>
 
-              <div class="career">
-                <div class="career-top">
-                  <span class="code">II</span>
-                  <span class="career-name">Ingeniería Industrial</span>
-                  <span class="arrow">›</span>
+              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería Electrónica">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">IE</span>
+                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería Electrónica</span>
+                  <span class="text-brand-500 text-base font-extrabold">›</span>
                 </div>
-                <div class="career-foot">
-                  <span>Configuración de retícula</span>
-                  <span>Editar</span>
-                </div>
-              </div>
-
-              <div class="career">
-                <div class="career-top">
-                  <span class="code">IINF</span>
-                  <span class="career-name">Ingeniería Informática</span>
-                  <span class="arrow">›</span>
-                </div>
-                <div class="career-foot">
-                  <span>Configuración de retícula</span>
-                  <span>Editar</span>
+                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
+                  <span>Configuración de retícula</span><span>Editar</span>
                 </div>
               </div>
 
-              <div class="career">
-                <div class="career-top">
-                  <span class="code">ISC</span>
-                  <span class="career-name">Ingeniería en Sistemas Computacionales</span>
-                  <span class="arrow">›</span>
+              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería Industrial">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">II</span>
+                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería Industrial</span>
+                  <span class="text-brand-500 text-base font-extrabold">›</span>
                 </div>
-                <div class="career-foot">
-                  <span>Configuración de retícula</span>
-                  <span>Editar</span>
-                </div>
-              </div>
-
-              <div class="career">
-                <div class="career-top">
-                  <span class="code">IA</span>
-                  <span class="career-name">Ingeniería en Administración</span>
-                  <span class="arrow">›</span>
-                </div>
-                <div class="career-foot">
-                  <span>Configuración de retícula</span>
-                  <span>Editar</span>
+                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
+                  <span>Configuración de retícula</span><span>Editar</span>
                 </div>
               </div>
 
-              <div class="total">
+              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería Informática">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">IINF</span>
+                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería Informática</span>
+                  <span class="text-brand-500 text-base font-extrabold">›</span>
+                </div>
+                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
+                  <span>Configuración de retícula</span><span>Editar</span>
+                </div>
+              </div>
+
+              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería en Sistemas Computacionales">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">ISC</span>
+                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería en Sistemas Computacionales</span>
+                  <span class="text-brand-500 text-base font-extrabold">›</span>
+                </div>
+                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
+                  <span>Configuración de retícula</span><span>Editar</span>
+                </div>
+              </div>
+
+              <div class="career-item px-5 py-4 cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería en Administración">
+                <div class="flex items-center gap-2">
+                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">IA</span>
+                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería en Administración</span>
+                  <span class="text-brand-500 text-base font-extrabold">›</span>
+                </div>
+                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
+                  <span>Configuración de retícula</span><span>Editar</span>
+                </div>
+              </div>
+
+              <div class="flex justify-between px-5 py-4 text-[#748095] bg-[#fafafa] text-xs">
                 <span>Estatus global</span>
-                <b>6 Carreras en Regla</b>
+                <b class="text-[#2a3548]">6 Carreras en Regla</b>
               </div>
             </article>
           </section>
         </div>
 
-        <!-- VISTA MÓDULO DE PERMISOS (MATRIZ) -->
-        <div id="view-permisos" class="view-panel hidden">
-          <h1>Matriz de Permisos y Roles</h1>
-          <p class="welcome">Configura el nivel de acceso granular por cada rol en el sistema TESCHA.</p>
+        <!-- VISTA GESTIÓN DE USUARIOS Y ROLES -->
+        <div id="view-roles" class="view-panel hidden">
+          <h1 class="m-0 text-[#202b3d] text-[26px] md:text-[29px] tracking-tight">Gestión de usuarios y roles</h1>
+          <p class="mt-1.5 mb-6 text-[#748095] text-sm">Administra los perfiles del sistema y configura los permisos de acceso para cada rol.</p>
 
-          <div class="matrix-card">
-            <div class="matrix-header-bar">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_8px_22px_rgba(31,38,50,.045)]">
+            <div class="flex items-center gap-2.5 flex-1 sm:max-w-[430px] px-3.5 py-2.5 rounded-[11px] border border-[#e8e4e1] bg-[#faf9f8] text-[#8b95a5]">
+              <i data-lucide="search" class="w-[17px]"></i>
+              <input id="role-search" type="search" placeholder="Buscar rol por nombre o descripción..." class="w-full border-0 outline-none bg-transparent text-[#253146] text-[13px] font-medium">
+            </div>
+            <button type="button" onclick="openRoleModal('new')"
+              class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              Nuevo rol
+            </button>
+          </div>
+
+          <section class="mt-4 overflow-hidden rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_8px_22px_rgba(31,38,50,.045)]">
+            <div class="flex items-center justify-between px-5 py-5 border-b border-[#efedeb]">
               <div>
-                <h2 style="margin:0; font-size:18px; color:#202b3d;">Asignación de Accesos por Módulo</h2>
-                <span style="font-size:12px; color:#748095;">Marca las casillas correspondientes para otorgar permisos.</span>
+                <h2 class="m-0 text-[#293448] text-base">Catálogo de roles</h2>
+                <span class="text-[#919aaa] text-[11px]">Perfiles disponibles dentro del sistema TESCHA</span>
               </div>
-              <button class="btn-save" onclick="alert('¡Permisos guardados correctamente!')">
-                <i data-lucide="save"></i>
-                Guardar Cambios
-              </button>
+              <span id="role-count" class="text-[#919aaa] text-[11px]">5 roles registrados</span>
             </div>
 
-            <div class="table-responsive">
-              <table class="matrix-table">
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse min-w-[760px]">
                 <thead>
                   <tr>
-                    <th>Módulo / Funcionalidad</th>
-                    <th class="text-center">SuperAdmin</th>
-                    <th class="text-center">Control Escolar</th>
-                    <th class="text-center">Jefes de Carrera</th>
-                    <th class="text-center">Docente</th>
-                    <th class="text-center">Alumno</th>
+                    <th class="px-5 py-3 text-[#7d8797] bg-[#fcfaf9] border-b border-[#ece9e6] text-[10px] text-left uppercase tracking-[.07em]">Rol / Perfil</th>
+                    <th class="px-5 py-3 text-[#7d8797] bg-[#fcfaf9] border-b border-[#ece9e6] text-[10px] text-left uppercase tracking-[.07em]">Usuarios</th>
+                    <th class="px-5 py-3 text-[#7d8797] bg-[#fcfaf9] border-b border-[#ece9e6] text-[10px] text-left uppercase tracking-[.07em]">Nivel de acceso</th>
+                    <th class="px-5 py-3 text-[#7d8797] bg-[#fcfaf9] border-b border-[#ece9e6] text-[10px] text-left uppercase tracking-[.07em]">Estatus</th>
+                    <th class="px-5 py-3 text-[#7d8797] bg-[#fcfaf9] border-b border-[#ece9e6] text-[10px] text-left uppercase tracking-[.07em]">Acciones</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td><b>Gestión de Usuarios y Roles</b></td>
-                    <td class="text-center"><input type="checkbox" checked disabled></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                  </tr>
-                  <tr>
-                    <td><b>Captura y Cierre de Actas</b></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                  </tr>
-                  <tr>
-                    <td><b>Consulta de Calificaciones / Kardex</b></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                  </tr>
-                  <tr>
-                    <td><b>Asignación Docente / Materias</b></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                  </tr>
-                  <tr>
-                    <td><b>Configuración de Periodo Escolar</b></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                  </tr>
-                  <tr>
-                    <td><b>Reportes y Bitácoras del Sistema</b></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox" checked></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                    <td class="text-center"><input type="checkbox"></td>
-                  </tr>
-                </tbody>
+                <tbody id="roles-table-body"></tbody>
               </table>
+              <div id="empty-role" class="hidden p-9 text-center text-[#8993a4] text-[13px]">No se encontraron roles con esa búsqueda.</div>
+            </div>
+          </section>
+        </div>
+
+        <!-- VISTA MATRIZ DE PERMISOS -->
+        <div id="view-permisos" class="view-panel hidden">
+          <h1 class="m-0 text-[#202b3d] text-[26px] md:text-[29px] tracking-tight">Matriz de permisos</h1>
+          <p class="mt-1.5 mb-6 text-[#748095] text-sm">Marca o desmarca los permisos de cada rol por módulo del sistema TESCHA.</p>
+
+          <div class="rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_8px_22px_rgba(31,38,50,.045)] overflow-hidden">
+            <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-[#efedeb]">
+              <div class="flex items-center gap-2.5">
+                <div class="grid place-items-center w-9 h-9 rounded-[10px] text-brand-500 bg-brand-100"><i data-lucide="grid-3x3" class="w-[18px] h-[18px]"></i></div>
+                <div>
+                  <h2 class="m-0 text-[#293448] text-[15px]">Módulos y roles</h2>
+                  <span class="text-[#919aaa] text-[11px]">Filas: módulos del sistema · Columnas: roles</span>
+                </div>
+              </div>
+              <span class="hidden sm:flex items-center gap-1.5 text-[#9aa3b1] text-[10px] font-bold"><i data-lucide="lock" class="w-3 h-3"></i>Administrador con acceso fijo</span>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table id="permission-matrix" class="w-full border-collapse text-sm min-w-[640px]">
+                <thead id="permission-matrix-head"></thead>
+                <tbody id="permission-matrix-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2.5 mt-4 py-4 px-5 rounded-2xl border border-[#ece9e6] bg-white">
+            <button type="button" onclick="showRolesView()" class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">Volver al catálogo</button>
+            <button type="button" onclick="savePermissions()"
+              class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              Guardar cambios
+            </button>
+          </div>
+        </div>
+
+        <!-- MODAL CREAR / EDITAR ROL -->
+        <div id="role-modal" class="modal-backdrop fixed inset-0 z-[1000] hidden place-items-center p-5 bg-black/55 backdrop-blur-sm">
+          <div class="w-full max-w-[520px] max-h-[calc(100vh-40px)] overflow-auto rounded-[20px] bg-white shadow-2xl animate-modalIn">
+            <div class="flex items-start justify-between gap-4 px-5.5 pt-5.5 pb-4 border-b border-[#eeeae8]">
+              <div>
+                <h2 id="role-modal-title" class="m-0 text-[#283348] text-lg">Nuevo rol</h2>
+                <p id="role-modal-subtitle" class="mt-1 mb-0 text-[#919aaa] text-[11px]">Registra un nuevo perfil de acceso para TESCHA.</p>
+              </div>
+              <button type="button" onclick="closeRoleModal()" aria-label="Cerrar"
+                class="grid place-items-center w-[34px] h-[34px] rounded-[9px] text-[#788395] bg-[#f7f5f3] transition-colors hover:text-brand-700 hover:bg-brand-100">
+                <i data-lucide="x" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <div class="p-5.5">
+              <div class="mb-3.5">
+                <label for="role-name-input" class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Nombre del rol</label>
+                <input id="role-name-input" type="text" placeholder="Ej. Coordinador Académico" class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+              </div>
+              <div class="mb-3.5">
+                <label for="role-desc-input" class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Descripción</label>
+                <textarea id="role-desc-input" placeholder="Describe brevemente las funciones de este perfil..." class="w-full min-h-[86px] py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] resize-y focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10"></textarea>
+              </div>
+              <div class="mb-3.5">
+                <label for="role-level-input" class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Nivel de acceso</label>
+                <input id="role-level-input" type="text" placeholder="Ej. Gestión académica" class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+              </div>
+              <div id="edit-permissions-box" class="hidden items-center justify-between gap-4 mt-4 p-3.5 rounded-xl border border-[#eadfe3] bg-[#fcf7f9]">
+                <div>
+                  <strong class="block text-[#5c2036] text-xs">Permisos del rol</strong>
+                  <span class="block mt-1 text-[#9a7d88] text-[10px]">Configura qué módulos puede consultar o administrar.</span>
+                </div>
+                <button type="button" onclick="openPermissionsFromModal()" class="py-2 px-3 rounded-[9px] border border-[#d7b5c2] text-brand-700 bg-white font-bold text-[11px] whitespace-nowrap transition-colors hover:bg-brand-100">Configurar permisos</button>
+              </div>
+            </div>
+            <div class="flex justify-end gap-2 px-5.5 pb-5 pt-3.5">
+              <button type="button" onclick="closeRoleModal()" class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">Cancelar</button>
+              <button type="button" onclick="saveRole()"
+                class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                <span id="role-submit-text">Crear rol</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1240,48 +513,374 @@
     </div>
   </div>
 
+  <!-- contenedor de notificaciones toast -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[1200] flex flex-col gap-2"></div>
+
   <script>
     lucide.createIcons();
 
+    /* ---------- Sidebar móvil ---------- */
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    function openSidebar() { sidebar.classList.remove('-translate-x-full'); sidebarOverlay.classList.remove('hidden'); }
+    function closeSidebar() { sidebar.classList.add('-translate-x-full'); sidebarOverlay.classList.add('hidden'); }
+    document.getElementById('sidebar-open').addEventListener('click', openSidebar);
+    document.getElementById('sidebar-close').addEventListener('click', closeSidebar);
+    sidebarOverlay.addEventListener('click', closeSidebar);
+
+    /* ---------- Toasts ---------- */
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'animate-toastIn flex items-center gap-2 py-3 px-4 rounded-xl bg-[#243044] text-white text-[13px] font-medium shadow-lg max-w-[280px]';
+      toast.innerHTML = `<i data-lucide="info" class="w-4 h-4 text-gold-300 shrink-0"></i><span>${message}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+      setTimeout(() => {
+        toast.style.transition = 'opacity .2s, transform .2s';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(6px)';
+        setTimeout(() => toast.remove(), 200);
+      }, 2600);
+    }
+    document.querySelectorAll('[data-toast]').forEach(el => {
+      el.addEventListener('click', () => showToast(`“${el.dataset.toast}” — módulo en desarrollo.`));
+    });
+
+    /* ---------- Vistas / navegación ---------- */
     const viewDashboard = document.getElementById('view-dashboard');
+    const viewRoles = document.getElementById('view-roles');
     const viewPermisos = document.getElementById('view-permisos');
     const breadcrumbTitle = document.getElementById('breadcrumb-title');
 
     const btnDashboard = document.getElementById('btn-dashboard');
+    const btnRoles = document.getElementById('btn-roles');
     const btnPermisos = document.getElementById('btn-permisos');
 
+    const ADMIN_ROLE_ID = 1;
+
+    const roles = [
+      { id: 1, name: 'Administrador', desc: 'Administración general del sistema', users: 2, level: 'Acceso total', icon: 'shield-check', permissions: [0,1,2,3,4,5,6,7] },
+      { id: 2, name: 'Control Escolar', desc: 'Gestión de procesos escolares', users: 8, level: 'Administrativo', icon: 'graduation-cap', permissions: [1,2,3,4,5,6] },
+      { id: 3, name: 'Jefe de Carrera', desc: 'Gestión académica de su carrera', users: 6, level: 'Académico', icon: 'award', permissions: [2,3,5,7] },
+      { id: 4, name: 'Docente', desc: 'Consulta y captura académica', users: 60, level: 'Académico', icon: 'user-cog', permissions: [2,4] },
+      { id: 5, name: 'Alumno', desc: 'Consulta de información académica', users: 779, level: 'Consulta', icon: 'graduation-cap', permissions: [2] }
+    ];
+
+    const permissionGroups = [
+      { title: 'Usuarios y roles', icon: 'users', items: [
+        ['Gestionar usuarios', 'Crear, editar y desactivar cuentas', 0],
+        ['Gestionar roles', 'Crear perfiles y asignar permisos', 1]
+      ]},
+      { title: 'Procesos académicos', icon: 'book-open', items: [
+        ['Captura y cierre de actas', 'Registrar y cerrar calificaciones', 2],
+        ['Asignación docente / materias', 'Administrar docentes y grupos', 3]
+      ]},
+      { title: 'Consultas', icon: 'search-check', items: [
+        ['Calificaciones / Kardex', 'Consultar historial académico', 4],
+        ['Reportes generales', 'Consultar y generar reportes', 5]
+      ]},
+      { title: 'Configuración', icon: 'settings-2', items: [
+        ['Periodo escolar', 'Abrir y configurar ciclos escolares', 6],
+        ['Bitácora / Logs', 'Consultar actividad del sistema', 7]
+      ]}
+    ];
+
+    let editingRoleId = null;
+
+    const navActiveClasses = ['bg-white/10', 'text-white', 'border-gold-300'];
+    const navInactiveClasses = ['text-white/70', 'border-transparent'];
+
     function setActiveButton(element) {
-      document.querySelectorAll(".nav button").forEach((item) => {
-        item.classList.remove("active");
+      document.querySelectorAll('[data-nav]').forEach(item => {
+        item.classList.remove(...navActiveClasses);
+        item.classList.add(...navInactiveClasses);
       });
-      if(element) element.classList.add("active");
+      if (element) {
+        element.classList.remove(...navInactiveClasses);
+        element.classList.add(...navActiveClasses);
+      }
+    }
+
+    function hideAllViews() {
+      [viewDashboard, viewRoles, viewPermisos].forEach(view => view.classList.add('hidden'));
     }
 
     function showDashboardView() {
-      viewPermisos.classList.add('hidden');
+      hideAllViews();
       viewDashboard.classList.remove('hidden');
-      breadcrumbTitle.textContent = "Administración General";
+      breadcrumbTitle.textContent = 'Administración General';
       setActiveButton(btnDashboard);
+      renderStats();
+      closeSidebar();
     }
 
-    function showPermisosView() {
-      viewDashboard.classList.add('hidden');
+    function showRolesView() {
+      hideAllViews();
+      viewRoles.classList.remove('hidden');
+      breadcrumbTitle.textContent = 'Usuarios y Roles';
+      setActiveButton(btnRoles);
+      renderRoles();
+      closeSidebar();
+    }
+
+    function showPermisosView(highlightRoleId = null) {
+      hideAllViews();
       viewPermisos.classList.remove('hidden');
-      breadcrumbTitle.textContent = "Matriz de Permisos";
+      breadcrumbTitle.textContent = 'Usuarios y Roles › Permisos';
       setActiveButton(btnPermisos);
+      renderPermissionMatrix();
+      closeSidebar();
+      if (highlightRoleId) flashRoleColumn(Number(highlightRoleId));
     }
 
-    btnDashboard.addEventListener('click', showDashboardView);
-    btnPermisos.addEventListener('click', showPermisosView);
-
-    // Eventos generales para marcar navegación activa en los demás botones
-    document.querySelectorAll(".nav button").forEach((button) => {
-      button.addEventListener("click", () => {
-        if(button !== btnDashboard && button !== btnPermisos) {
-          setActiveButton(button);
-        }
+    function flashRoleColumn(roleId) {
+      document.querySelectorAll(`[data-role-col="${roleId}"]`).forEach(cell => {
+        cell.classList.add('bg-brand-50');
+        setTimeout(() => cell.classList.remove('bg-brand-50'), 1200);
       });
+    }
+
+    function renderStats() {
+      const totalModules = permissionGroups.reduce((sum, g) => sum + g.items.length, 0);
+      const grid = document.getElementById('stats');
+      grid.innerHTML = `
+        <article class="stat-card p-5 rounded-2xl border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.045)] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+          <div class="grid place-items-center w-[38px] h-[38px] rounded-xl text-brand-500 bg-brand-100"><i data-lucide="users" class="w-5 h-5"></i></div>
+          <b class="block mt-5 text-[#172033] text-[26px] md:text-[29px] tracking-tight">${roles.length}</b>
+          <strong class="block mt-1 text-[#657187] text-sm font-semibold">Roles Registrados</strong>
+          <span class="block mt-1.5 text-[#9ba5b5] text-[11px]">Perfiles de acceso disponibles</span>
+        </article>
+
+        <article class="stat-card p-5 rounded-2xl border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.045)] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+          <div class="grid place-items-center w-[38px] h-[38px] rounded-xl text-blue-600 bg-blue-50"><i data-lucide="shield-half" class="w-5 h-5"></i></div>
+          <b class="block mt-5 text-[#172033] text-[26px] md:text-[29px] tracking-tight">${totalModules}</b>
+          <strong class="block mt-1 text-[#657187] text-sm font-semibold">Módulos con Permisos</strong>
+          <span class="block mt-1.5 text-[#9ba5b5] text-[11px]">Configuración granular por rol</span>
+        </article>
+
+        <article class="stat-card p-5 rounded-2xl border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.045)] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+          <div class="grid place-items-center w-[38px] h-[38px] rounded-xl text-gold-500 bg-amber-50"><i data-lucide="landmark" class="w-5 h-5"></i></div>
+          <b class="block mt-5 text-[#172033] text-[26px] md:text-[29px] tracking-tight">6</b>
+          <strong class="block mt-1 text-[#657187] text-sm font-semibold">Carreras Registradas</strong>
+          <span class="block mt-1.5 text-[#9ba5b5] text-[11px]">Oferta educativa activa</span>
+        </article>
+
+        <article class="stat-card p-5 rounded-2xl border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.045)] transition-all duration-200 hover:-translate-y-1 hover:shadow-lg">
+          <div class="grid place-items-center w-[38px] h-[38px] rounded-xl text-emerald-600 bg-emerald-50"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+          <b class="block mt-5 text-[#172033] text-[26px] md:text-[29px] tracking-tight">100%</b>
+          <strong class="block mt-1 text-[#657187] text-sm font-semibold">Permisos / ROL</strong>
+          <span class="block mt-1.5 text-[#9ba5b5] text-[11px]">Acceso Total Administrador</span>
+        </article>
+      `;
+      lucide.createIcons();
+    }
+
+    function renderRoles(filter = '') {
+      const tbody = document.getElementById('roles-table-body');
+      const empty = document.getElementById('empty-role');
+      const normalized = filter.trim().toLowerCase();
+      const filtered = roles.filter(role => `${role.name} ${role.desc} ${role.level}`.toLowerCase().includes(normalized));
+
+      tbody.innerHTML = filtered.map(role => {
+        const isAdmin = role.id === ADMIN_ROLE_ID;
+        const deleteBtn = isAdmin
+          ? `<button class="icon-btn grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#c7cbd2] bg-[#fafafa] cursor-not-allowed" title="El rol Administrador no se puede eliminar" disabled><i data-lucide="lock" class="w-4 h-4"></i></button>`
+          : `<button class="icon-btn grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110" title="Eliminar rol" onclick="deleteRole(${role.id})"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+
+        return `
+        <tr class="transition-colors duration-150 hover:bg-[#fcfafb]">
+          <td class="px-5 py-4 border-b border-[#f2efed]">
+            <div class="flex items-center gap-3 min-w-[220px]">
+              <div class="grid place-items-center w-10 h-10 shrink-0 rounded-xl text-brand-500 bg-brand-100"><i data-lucide="${role.icon}" class="w-[19px] h-[19px]"></i></div>
+              <div>
+                <span class="block text-[#263247] font-extrabold">${role.name}${isAdmin ? ' <span class=\'ml-1 align-middle text-[9px] font-extrabold text-gold-500 bg-amber-50 px-1.5 py-0.5 rounded\'>PROTEGIDO</span>' : ''}</span>
+                <span class="block mt-0.5 text-[#99a2b0] text-[11px]">${role.desc}</span>
+              </div>
+            </div>
+          </td>
+          <td class="px-5 py-4 border-b border-[#f2efed] text-[#39465a] text-[13px]"><strong>${role.users}</strong></td>
+          <td class="px-5 py-4 border-b border-[#f2efed]"><span class="inline-flex py-1 px-2.5 rounded-full text-brand-700 bg-brand-100 text-[10px] font-extrabold">${role.level}</span></td>
+          <td class="px-5 py-4 border-b border-[#f2efed]"><span class="inline-flex items-center gap-1.5 text-emerald-700 text-[11px] font-bold"><span class="w-[7px] h-[7px] rounded-full bg-emerald-500 inline-block"></span>Activo</span></td>
+          <td class="px-5 py-4 border-b border-[#f2efed]">
+            <div class="flex gap-1.5">
+              <button class="icon-btn grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110" title="Editar rol" onclick="openRoleModal('edit', ${role.id})"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+              <button class="icon-btn grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110" title="Configurar permisos" onclick="showPermisosView(${role.id})"><i data-lucide="shield-check" class="w-4 h-4"></i></button>
+              ${deleteBtn}
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      empty.style.display = filtered.length ? 'none' : 'block';
+      document.getElementById('role-count').textContent = `${filtered.length} ${filtered.length === 1 ? 'rol encontrado' : 'roles registrados'}`;
+      lucide.createIcons();
+    }
+
+    function openRoleModal(mode, id = null) {
+      const modal = document.getElementById('role-modal');
+      const title = document.getElementById('role-modal-title');
+      const subtitle = document.getElementById('role-modal-subtitle');
+      const submit = document.getElementById('role-submit-text');
+      const permissionBox = document.getElementById('edit-permissions-box');
+      const role = roles.find(item => item.id === Number(id));
+
+      editingRoleId = mode === 'edit' ? Number(id) : null;
+      if (role) {
+        title.textContent = 'Editar rol';
+        subtitle.textContent = 'Actualiza la información del perfil seleccionado.';
+        submit.textContent = 'Guardar cambios';
+        document.getElementById('role-name-input').value = role.name;
+        document.getElementById('role-desc-input').value = role.desc;
+        document.getElementById('role-level-input').value = role.level;
+        permissionBox.classList.remove('hidden');
+        permissionBox.classList.add('flex');
+        const nameInput = document.getElementById('role-name-input');
+        if (role.id === ADMIN_ROLE_ID) { nameInput.setAttribute('readonly', 'true'); } else { nameInput.removeAttribute('readonly'); }
+      } else {
+        title.textContent = 'Nuevo rol';
+        subtitle.textContent = 'Registra un nuevo perfil de acceso para TESCHA.';
+        submit.textContent = 'Crear rol';
+        document.getElementById('role-name-input').removeAttribute('readonly');
+        document.getElementById('role-name-input').value = '';
+        document.getElementById('role-desc-input').value = '';
+        document.getElementById('role-level-input').value = '';
+        permissionBox.classList.add('hidden');
+        permissionBox.classList.remove('flex');
+      }
+      modal.classList.remove('hidden');
+      modal.classList.add('grid');
+      modal.setAttribute('aria-hidden', 'false');
+      setTimeout(() => document.getElementById('role-name-input').focus(), 50);
+    }
+
+    function closeRoleModal() {
+      const modal = document.getElementById('role-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('grid');
+      modal.setAttribute('aria-hidden', 'true');
+      editingRoleId = null;
+    }
+
+    function saveRole() {
+      const name = document.getElementById('role-name-input').value.trim();
+      const desc = document.getElementById('role-desc-input').value.trim() || 'Perfil de acceso del sistema';
+      const level = document.getElementById('role-level-input').value.trim() || 'Personalizado';
+      if (!name) {
+        document.getElementById('role-name-input').focus();
+        alert('Escribe un nombre para el rol.');
+        return;
+      }
+      if (editingRoleId) {
+        const role = roles.find(item => item.id === editingRoleId);
+        if (role) {
+          if (role.id === ADMIN_ROLE_ID) { role.desc = desc; role.level = level; }
+          else { role.name = name; role.desc = desc; role.level = level; }
+        }
+      } else {
+        const newId = Math.max(...roles.map(role => role.id)) + 1;
+        roles.push({ id: newId, name, desc, users: 0, level, icon: 'shield', permissions: [] });
+      }
+      closeRoleModal();
+      renderRoles(document.getElementById('role-search').value);
+      showToast('Rol guardado correctamente.');
+    }
+
+    function openPermissionsFromModal() {
+      const id = editingRoleId;
+      closeRoleModal();
+      if (id) showPermisosView(id);
+    }
+
+    function deleteRole(id) {
+      const role = roles.find(item => item.id === Number(id));
+      if (!role) return;
+      if (role.id === ADMIN_ROLE_ID) {
+        alert('El rol “Administrador” no se puede eliminar: es el rol principal del sistema.');
+        return;
+      }
+      if (role.users > 0) {
+        alert(`No se puede eliminar “${role.name}” porque tiene ${role.users} usuarios asignados.`);
+        return;
+      }
+      if (confirm(`¿Eliminar el rol “${role.name}”?`)) {
+        const index = roles.findIndex(item => item.id === Number(id));
+        roles.splice(index, 1);
+        renderRoles(document.getElementById('role-search').value);
+        showToast(`Rol “${role.name}” eliminado.`);
+      }
+    }
+
+    function renderPermissionMatrix() {
+      const head = document.getElementById('permission-matrix-head');
+      const body = document.getElementById('permission-matrix-body');
+
+      head.innerHTML = `
+        <tr>
+          <th class="sticky left-0 z-10 px-5 py-3.5 text-left bg-[#fcfaf9] border-b border-r border-[#ece9e6] text-[10px] text-[#7d8797] uppercase tracking-[.06em] min-w-[210px]">Módulo</th>
+          ${roles.map(role => `
+            <th class="px-3 py-3.5 bg-[#fcfaf9] border-b border-[#ece9e6] text-center min-w-[110px]">
+              <div class="flex flex-col items-center gap-1.5">
+                <div class="grid place-items-center w-8 h-8 rounded-full text-white ${role.id === ADMIN_ROLE_ID ? 'bg-gold-500' : 'bg-brand-500'}"><i data-lucide="${role.icon}" class="w-4 h-4"></i></div>
+                <span class="text-[#293448] text-[11px] font-extrabold leading-tight">${role.name}</span>
+                ${role.id === ADMIN_ROLE_ID ? '<span class="flex items-center gap-1 text-[9px] font-bold text-gold-500"><i data-lucide=\'lock\' class=\'w-2.5 h-2.5\'></i>fijo</span>' : ''}
+              </div>
+            </th>
+          `).join('')}
+        </tr>`;
+
+      body.innerHTML = permissionGroups.map(group => `
+        <tr>
+          <td colspan="${roles.length + 1}" class="sticky left-0 bg-[#faf8f7] px-5 py-2 border-b border-[#f1efed]">
+            <div class="flex items-center gap-2 text-brand-700 text-[11px] font-extrabold uppercase tracking-[.05em]">
+              <i data-lucide="${group.icon}" class="w-3.5 h-3.5"></i>${group.title}
+            </div>
+          </td>
+        </tr>
+        ${group.items.map(item => `
+          <tr class="hover:bg-[#fcfafb] transition-colors duration-150">
+            <td class="sticky left-0 z-10 bg-white px-5 py-3 border-b border-r border-[#f1efed] min-w-[210px]">
+              <strong class="block text-[#354156] text-xs">${item[0]}</strong>
+              <span class="block mt-0.5 text-[#9aa3b1] text-[10px]">${item[1]}</span>
+            </td>
+            ${roles.map(role => {
+              const checked = role.permissions.includes(item[2]) ? 'checked' : '';
+              const isAdmin = role.id === ADMIN_ROLE_ID;
+              return `<td data-role-col="${role.id}" class="px-3 py-3 border-b border-[#f1efed] text-center transition-colors duration-300">
+                <input type="checkbox" data-role="${role.id}" data-permission="${item[2]}" ${checked} ${isAdmin ? 'checked disabled title="El rol Administrador siempre tiene acceso total"' : ''}
+                  class="w-[18px] h-[18px] rounded border-2 border-[#d9dde3] cursor-pointer transition-transform duration-150 hover:scale-125 ${isAdmin ? 'opacity-60 cursor-not-allowed accent-gold-500' : ''}">
+              </td>`;
+            }).join('')}
+          </tr>
+        `).join('')}
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function savePermissions() {
+      roles.forEach(role => {
+        if (role.id === ADMIN_ROLE_ID) return;
+        role.permissions = [...document.querySelectorAll(`input[data-role="${role.id}"]:checked`)].map(input => Number(input.dataset.permission));
+      });
+      showToast('Permisos guardados para todos los roles.');
+    }
+
+    /* ---------- Eventos ---------- */
+    btnDashboard.addEventListener('click', showDashboardView);
+    btnRoles.addEventListener('click', showRolesView);
+    btnPermisos.addEventListener('click', () => showPermisosView());
+
+    document.getElementById('role-search').addEventListener('input', event => renderRoles(event.target.value));
+    document.getElementById('role-modal').addEventListener('click', event => {
+      if (event.target.id === 'role-modal') closeRoleModal();
     });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') { closeRoleModal(); }
+    });
+
+    renderStats();
+    renderRoles();
   </script>
 </body>
 </html>
