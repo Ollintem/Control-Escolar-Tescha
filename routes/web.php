@@ -4,6 +4,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Admin\MatrizPermisos;
+use App\Http\Controllers\RolController;
+use App\Http\Controllers\PermisoApiController;
 
 Route::redirect('/', '/login');
 
@@ -11,9 +13,20 @@ Route::redirect('/', '/login');
 Route::middleware(['auth'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::view('profile', 'profile')->name('profile');
-    
-    // Ruta del módulo de permisos
+
+    // Ruta del módulo de permisos (Livewire standalone)
     Route::get('/permisos', MatrizPermisos::class)->name('permisos.index');
+
+    // ===== API para el Dashboard (JavaScript) =====
+    // Roles
+    Route::get('/api/roles', [RolController::class, 'index'])->name('api.roles.index');
+    Route::post('/api/roles', [RolController::class, 'store'])->name('api.roles.store');
+    Route::put('/api/roles/{id}', [RolController::class, 'update'])->name('api.roles.update');
+    Route::delete('/api/roles/{id}', [RolController::class, 'destroy'])->name('api.roles.destroy');
+
+    // Permisos
+    Route::get('/api/permisos', [PermisoApiController::class, 'index'])->name('api.permisos.index');
+    Route::post('/api/permisos', [PermisoApiController::class, 'store'])->name('api.permisos.store');
 });
 
 // Ruta de acceso directo forzado
@@ -25,7 +38,7 @@ Route::get('/bypass-admin', function () {
     }
 
     Auth::login($user);
-    
+
     return redirect()->route('dashboard');
 });
 

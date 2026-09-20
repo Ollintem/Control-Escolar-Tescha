@@ -10,19 +10,22 @@ class CreateRole extends Component
     public $nombre_rol = '';
     public $descripcion = '';
 
-    protected $rules = [
-        'nombre_rol' => 'required|min:3|unique:roles,nombre_rol', // Nombre de la columna en la tabla roles
-        'descripcion' => 'nullable|string|max:255',
-    ];
+    protected function rules(): array
+    {
+        return [
+            'nombre_rol'  => 'required|min:2|max:30|unique:roles,nombre',
+            'descripcion' => 'nullable|string|max:120',
+        ];
+    }
 
     public function guardar()
     {
         $this->validate();
 
-        // Guardar en la BD usando tu modelo Role
         Role::create([
-            'nombre_rol' => $this->nombre_rol,
+            'nombre'      => $this->nombre_rol,
             'descripcion' => $this->descripcion,
+            'activo'      => 1,
         ]);
 
         session()->flash('message', '¡Rol guardado exitosamente!');

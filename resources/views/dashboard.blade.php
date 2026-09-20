@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>TESCHA | Panel de Administración General</title>
 
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -559,32 +560,117 @@
 
     const ADMIN_ROLE_ID = 1;
 
-    const roles = [
-      { id: 1, name: 'Administrador', desc: 'Administración general del sistema', users: 2, level: 'Acceso total', icon: 'shield-check', permissions: [0,1,2,3,4,5,6,7] },
-      { id: 2, name: 'Control Escolar', desc: 'Gestión de procesos escolares', users: 8, level: 'Administrativo', icon: 'graduation-cap', permissions: [1,2,3,4,5,6] },
-      { id: 3, name: 'Jefe de Carrera', desc: 'Gestión académica de su carrera', users: 6, level: 'Académico', icon: 'award', permissions: [2,3,5,7] },
-      { id: 4, name: 'Docente', desc: 'Consulta y captura académica', users: 60, level: 'Académico', icon: 'user-cog', permissions: [2,4] },
-      { id: 5, name: 'Alumno', desc: 'Consulta de información académica', users: 779, level: 'Consulta', icon: 'graduation-cap', permissions: [2] }
-    ];
+    // ===== DATOS CARGADOS DESDE LA BASE DE DATOS =====
+    let roles = [];
+    let permisosFromDB = [];
+    let permissionGroups = [];
 
-    const permissionGroups = [
-      { title: 'Usuarios y roles', icon: 'users', items: [
-        ['Gestionar usuarios', 'Crear, editar y desactivar cuentas', 0],
-        ['Gestionar roles', 'Crear perfiles y asignar permisos', 1]
-      ]},
-      { title: 'Procesos académicos', icon: 'book-open', items: [
-        ['Captura y cierre de actas', 'Registrar y cerrar calificaciones', 2],
-        ['Asignación docente / materias', 'Administrar docentes y grupos', 3]
-      ]},
-      { title: 'Consultas', icon: 'search-check', items: [
-        ['Calificaciones / Kardex', 'Consultar historial académico', 4],
-        ['Reportes generales', 'Consultar y generar reportes', 5]
-      ]},
-      { title: 'Configuración', icon: 'settings-2', items: [
-        ['Periodo escolar', 'Abrir y configurar ciclos escolares', 6],
-        ['Bitácora / Logs', 'Consultar actividad del sistema', 7]
-      ]}
-    ];
+    // Iconos por defecto según nombre del rol
+    const roleIcons = {
+      'administrador': 'shield-check',
+      'control escolar': 'graduation-cap',
+      'jefe de carrera': 'award',
+      'docente': 'user-cog',
+      'alumno': 'graduation-cap',
+    };
+
+    // Niveles de acceso por defecto
+    const roleLevels = {
+      'administrador': 'Acceso total',
+      'control escolar': 'Administrativo',
+      'jefe de carrera': 'Académico',
+      'docente': 'Académico',
+      'alumno': 'Consulta',
+    };
+
+    /**
+     * Cargar roles desde la BD.
+     */
+    async function loadRolesFromDB() {
+      try {
+        const response = await fetch('{{ route("api.roles.index") }}', {
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (!response.ok) throw new Error('Error al cargar roles');
+        const data = await response.json();
+
+        roles = data.map(r => ({
+          id: r.id_rol,
+          name: r.nombre,
+          desc: r.descripcion || 'Perfil de acceso del sistema',
+          users: r.users_count || 0,
+          level: roleLevels[r.nombre.toLowerCase()] || 'Personalizado',
+          icon: roleIcons[r.nombre.toLowerCase()] || 'shield',
+          permissions: [],
+          activo: r.activo,
+          permisos_count: r.permisos_count || 0,
+        }));
+
+        // Después de cargar roles, cargar permisos para completar la matriz
+        await loadPermisosFromDB();
+
+        renderRoles(document.getElementById('role-search').value);
+        renderStats();
+      } catch (err) {
+        console.error('loadRolesFromDB:', err);
+        showToast('Error al cargar roles desde la base de datos.');
+      }
+    }
+
+    /**
+     * Cargar permisos desde la BD y construir permissionGroups.
+     */
+    async function loadPermisosFromDB() {
+      try {
+        const response = await fetch('{{ route("api.permisos.index") }}', {
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (!response.ok) throw new Error('Error al cargar permisos');
+        const data = await response.json();
+
+        permisosFromDB = data.permisos;
+        const matriz = data.matriz;
+
+        // Agrupar permisos por módulo
+        const agrupados = {};
+        permisosFromDB.forEach(p => {
+          if (!agrupados[p.modulo]) agrupados[p.modulo] = [];
+          agrupados[p.modulo].push(p);
+        });
+
+        const iconMap = {
+          'Usuarios': 'users',
+          'Roles': 'shield-half',
+          'Académico': 'book-open',
+          'Calificaciones': 'search-check',
+          'Reportes': 'file-text',
+          'Configuración': 'settings-2',
+          'General': 'grid-3x3',
+        };
+
+        permissionGroups = Object.entries(agrupados).map(([modulo, permisosList]) => ({
+          title: modulo,
+          icon: iconMap[modulo] || 'layers',
+          items: permisosList.map(p => [
+            p.descripcion || `${p.accion} ${p.modulo}`,
+            p.accion,
+            p.id_permiso,
+          ]),
+        }));
+
+        // Actualizar permisos de cada rol según la matriz
+        roles.forEach(role => {
+          if (matriz[role.id]) {
+            role.permissions = Object.entries(matriz[role.id])
+              .filter(([_, val]) => val === true)
+              .map(([key]) => Number(key));
+          }
+        });
+
+      } catch (err) {
+        console.error('loadPermisosFromDB:', err);
+      }
+    }
 
     let editingRoleId = null;
 
@@ -762,7 +848,7 @@
       editingRoleId = null;
     }
 
-    function saveRole() {
+    async function saveRole() {
       const name = document.getElementById('role-name-input').value.trim();
       const desc = document.getElementById('role-desc-input').value.trim() || 'Perfil de acceso del sistema';
       const level = document.getElementById('role-level-input').value.trim() || 'Personalizado';
@@ -771,19 +857,53 @@
         alert('Escribe un nombre para el rol.');
         return;
       }
-      if (editingRoleId) {
-        const role = roles.find(item => item.id === editingRoleId);
-        if (role) {
-          if (role.id === ADMIN_ROLE_ID) { role.desc = desc; role.level = level; }
-          else { role.name = name; role.desc = desc; role.level = level; }
+
+      try {
+        if (editingRoleId) {
+          // ===== ACTUALIZAR ROL EN LA BD =====
+          const response = await fetch(`{{ url('/api/roles') }}/${editingRoleId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': '{{ csrf_token() }}',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ nombre: name, descripcion: desc }),
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            alert(result.message || 'Error al actualizar el rol.');
+            return;
+          }
+          showToast('Rol actualizado correctamente.');
+        } else {
+          // ===== CREAR ROL EN LA BD =====
+          const response = await fetch('{{ route("api.roles.store") }}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': '{{ csrf_token() }}',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ nombre: name, descripcion: desc }),
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            alert(result.message || 'Error al crear el rol.');
+            return;
+          }
+          showToast('Rol creado correctamente.');
         }
-      } else {
-        const newId = Math.max(...roles.map(role => role.id)) + 1;
-        roles.push({ id: newId, name, desc, users: 0, level, icon: 'shield', permissions: [] });
+
+        closeRoleModal();
+        // Recargar roles desde la BD
+        await loadRolesFromDB();
+      } catch (err) {
+        console.error('saveRole:', err);
+        alert('Error de conexión al guardar el rol.');
       }
-      closeRoleModal();
-      renderRoles(document.getElementById('role-search').value);
-      showToast('Rol guardado correctamente.');
     }
 
     function openPermissionsFromModal() {
@@ -792,22 +912,38 @@
       if (id) showPermisosView(id);
     }
 
-    function deleteRole(id) {
+    async function deleteRole(id) {
       const role = roles.find(item => item.id === Number(id));
       if (!role) return;
       if (role.id === ADMIN_ROLE_ID) {
-        alert('El rol “Administrador” no se puede eliminar: es el rol principal del sistema.');
+        alert('El rol "Administrador" no se puede eliminar: es el rol principal del sistema.');
         return;
       }
       if (role.users > 0) {
-        alert(`No se puede eliminar “${role.name}” porque tiene ${role.users} usuarios asignados.`);
+        alert(`No se puede eliminar "${role.name}" porque tiene ${role.users} usuarios asignados.`);
         return;
       }
-      if (confirm(`¿Eliminar el rol “${role.name}”?`)) {
-        const index = roles.findIndex(item => item.id === Number(id));
-        roles.splice(index, 1);
-        renderRoles(document.getElementById('role-search').value);
-        showToast(`Rol “${role.name}” eliminado.`);
+      if (!confirm(`¿Eliminar el rol "${role.name}"?`)) return;
+
+      try {
+        const response = await fetch(`{{ url('/api/roles') }}/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          alert(result.message || 'Error al eliminar el rol.');
+          return;
+        }
+        showToast(`Rol "${role.name}" eliminado.`);
+        await loadRolesFromDB();
+      } catch (err) {
+        console.error('deleteRole:', err);
+        alert('Error de conexión al eliminar el rol.');
       }
     }
 
@@ -858,12 +994,40 @@
       lucide.createIcons();
     }
 
-    function savePermissions() {
+    async function savePermissions() {
+      // Construir la matriz de permisos desde los checkboxes del DOM
+      const matriz = {};
       roles.forEach(role => {
         if (role.id === ADMIN_ROLE_ID) return;
-        role.permissions = [...document.querySelectorAll(`input[data-role="${role.id}"]:checked`)].map(input => Number(input.dataset.permission));
+        matriz[role.id] = {};
+        document.querySelectorAll(`input[data-role="${role.id}"]`).forEach(input => {
+          matriz[role.id][input.dataset.permission] = input.checked;
+        });
       });
-      showToast('Permisos guardados para todos los roles.');
+
+      try {
+        const response = await fetch('{{ route("api.permisos.store") }}', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: JSON.stringify({ matriz }),
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          alert(result.message || 'Error al guardar permisos.');
+          return;
+        }
+        showToast('Permisos guardados en la base de datos.');
+        // Recargar permisos desde la BD
+        await loadPermisosFromDB();
+      } catch (err) {
+        console.error('savePermissions:', err);
+        alert('Error de conexión al guardar permisos.');
+      }
     }
 
     /* ---------- Eventos ---------- */
@@ -879,8 +1043,11 @@
       if (event.key === 'Escape') { closeRoleModal(); }
     });
 
-    renderStats();
-    renderRoles();
+    // ===== INICIALIZACIÓN: Cargar datos desde la BD =====
+    (async function init() {
+      await loadRolesFromDB();
+      lucide.createIcons();
+    })();
   </script>
 </body>
 </html>
