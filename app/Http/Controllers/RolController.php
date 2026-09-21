@@ -48,16 +48,33 @@ class RolController extends Controller
     {
         $role = Role::findOrFail($id);
 
+        // Proteger el rol Administrador: solo permitir cambiar descripción
+        if ($role->id_rol == 1) {
+            $request->validate([
+                'descripcion' => 'nullable|string|max:120',
+            ]);
+
+            $role->update([
+                'descripcion' => $request->input('descripcion', $role->descripcion),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Rol Administrador actualizado.',
+                'role'    => $role,
+            ]);
+        }
+
         $validated = $request->validate([
-            'nombre'     => 'required|string|min:2|max:30|unique:roles,nombre,' . $role->id_rol . ',id_rol',
+            'nombre'      => 'required|string|min:2|max:30|unique:roles,nombre,' . $role->id_rol . ',id_rol',
             'descripcion' => 'nullable|string|max:120',
-            'activo'     => 'nullable|boolean',
+            'activo'      => 'nullable|boolean',
         ]);
 
         $role->update([
-            'nombre'     => $validated['nombre'],
+            'nombre'      => $validated['nombre'],
             'descripcion' => $validated['descripcion'] ?? $role->descripcion,
-            'activo'     => $request->boolean('activo', $role->activo) ? 1 : 0,
+            'activo'      => $request->boolean('activo', $role->activo) ? 1 : 0,
         ]);
 
         return response()->json([

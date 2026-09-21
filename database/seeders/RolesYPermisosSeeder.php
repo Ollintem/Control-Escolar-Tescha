@@ -27,65 +27,82 @@ class RolesYPermisosSeeder extends Seeder
             );
         }
 
-        // ===== PERMISOS =====
-        $permisosData = [
-            // Usuarios y roles
-            ['id_permiso' => 1,  'modulo' => 'Usuarios', 'accion' => 'ver',     'descripcion' => 'Ver usuarios'],
-            ['id_permiso' => 2,  'modulo' => 'Usuarios', 'accion' => 'crear',   'descripcion' => 'Crear usuarios'],
-            ['id_permiso' => 3,  'modulo' => 'Usuarios', 'accion' => 'editar',  'descripcion' => 'Editar usuarios'],
-            ['id_permiso' => 4,  'modulo' => 'Usuarios', 'accion' => 'eliminar','descripcion' => 'Eliminar usuarios'],
+        // ===== PERMISOS (11 módulos × 4 acciones = 44 permisos) =====
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::table('rol_permiso')->truncate();
+        DB::table('permisos')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-            // Roles
-            ['id_permiso' => 5,  'modulo' => 'Roles',    'accion' => 'ver',     'descripcion' => 'Ver roles'],
-            ['id_permiso' => 6,  'modulo' => 'Roles',    'accion' => 'crear',   'descripcion' => 'Crear roles'],
-            ['id_permiso' => 7,  'modulo' => 'Roles',    'accion' => 'editar',  'descripcion' => 'Editar roles y permisos'],
-            ['id_permiso' => 8,  'modulo' => 'Roles',    'accion' => 'eliminar','descripcion' => 'Eliminar roles'],
-
-            // Académico
-            ['id_permiso' => 9,  'modulo' => 'Académico','accion' => 'ver',     'descripcion' => 'Ver información académica'],
-            ['id_permiso' => 10, 'modulo' => 'Académico','accion' => 'crear',   'descripcion' => 'Crear registros académicos'],
-            ['id_permiso' => 11, 'modulo' => 'Académico','accion' => 'editar',  'descripcion' => 'Editar registros académicos'],
-
-            // Calificaciones
-            ['id_permiso' => 12, 'modulo' => 'Calificaciones','accion' => 'ver',     'descripcion' => 'Ver calificaciones'],
-            ['id_permiso' => 13, 'modulo' => 'Calificaciones','accion' => 'crear',   'descripcion' => 'Capturar calificaciones'],
-            ['id_permiso' => 14, 'modulo' => 'Calificaciones','accion' => 'editar',  'descripcion' => 'Editar calificaciones'],
-            ['id_permiso' => 15, 'modulo' => 'Calificaciones','accion' => 'eliminar','descripcion' => 'Eliminar calificaciones'],
-
-            // Reportes
-            ['id_permiso' => 16, 'modulo' => 'Reportes', 'accion' => 'ver',     'descripcion' => 'Ver reportes'],
-            ['id_permiso' => 17, 'modulo' => 'Reportes', 'accion' => 'crear',   'descripcion' => 'Generar reportes'],
-
-            // Configuración
-            ['id_permiso' => 18, 'modulo' => 'Configuración','accion' => 'ver',     'descripcion' => 'Ver configuración'],
-            ['id_permiso' => 19, 'modulo' => 'Configuración','accion' => 'editar',  'descripcion' => 'Editar configuración'],
+        $modulos = [
+            'Usuarios y Roles',
+            'Carreras y Semestres',
+            'Materias y Plan de Estudios',
+            'Periodos Escolares',
+            'Alumnos',
+            'Docentes',
+            'Jefes de Carrera',
+            'Grupos y Asignaciones',
+            'Inscripciones',
+            'Calificaciones y Actas',
+            'Historial Académico',
         ];
 
-        foreach ($permisosData as $permiso) {
-            Permiso::updateOrCreate(
-                ['id_permiso' => $permiso['id_permiso']],
-                $permiso
-            );
+        $acciones = ['ver', 'crear', 'editar', 'eliminar'];
+        $id = 1;
+
+        foreach ($modulos as $modulo) {
+            foreach ($acciones as $accion) {
+                Permiso::create([
+                    'id_permiso'  => $id,
+                    'modulo'      => $modulo,
+                    'accion'      => $accion,
+                    'descripcion' => ucfirst($accion) . ' ' . $modulo,
+                ]);
+                $id++;
+            }
         }
 
         // ===== RELACIÓN ROL-PERMISO (Matriz de acceso) =====
-        DB::table('rol_permiso')->truncate();
 
-        // Administrador: TODOS los permisos (1-19)
-        $adminPermisos = range(1, 19);
-        $this->syncPermisos(1, $adminPermisos);
+        // Administrador: TODOS los permisos (1-44)
+        $this->syncPermisos(1, range(1, 44));
 
-        // Control Escolar: todo excepto eliminar usuarios/roles
-        $this->syncPermisos(2, [1,2,3,5,6,7,9,10,11,12,13,14,16,17,18,19]);
+        // Control Escolar: todo excepto eliminar en Usuarios y Roles
+        // Ver (1) Crear (2) Editar (3) de Usuarios y Roles + todo lo demás menos eliminar (8)
+        $permisosCE = [];
+        for ($i = 2; $i <= 44; $i++) {
+            // Saltar eliminar de Usuarios y Roles (id=4)
+            if ($i == 4) continue;
+            $permisosCE[] = $i;
+        }
+        $this->syncPermisos(2, $permisosCE);
 
-        // Jefe de Carrera: ver, académico, calificaciones, reportes
-        $this->syncPermisos(3, [1,5,9,10,11,12,13,14,16,17]);
+        // Jefe de Carrera: ver todo, crear/editar en módulos académicos
+        $permisosJC = [];
+        for ($i = 1; $i <= 44; $i++) {
+            $accion = (($i - 1) % 4); // 0=ver, 1=crear, 2=editar, 3=eliminar
+            if ($accion == 0) { $permisosJC[] = $i; } // ver todo
+            if ($accion == 1 || $accion == 2) { $permisosJC[] = $i; } // crear y editar
+        }
+        $this->syncPermisos(3, $permisosJC);
 
-        // Docente: ver y calificaciones
-        $this->syncPermisos(4, [1,5,9,12,13,16]);
+        // Docente: ver en casi todos, crear/editar solo en Calificaciones y Actas
+        $permisosDoc = [];
+        for ($i = 1; $i <= 44; $i++) {
+            $accion = (($i - 1) % 4);
+            if ($accion == 0) { $permisosDoc[] = $i; } // ver todo
+            // Crear y editar solo en Calificaciones y Actas (módulo 10, permisos 37-40)
+            if ($i >= 37 && $i <= 38) { $permisosDoc[] = $i; }
+        }
+        $this->syncPermisos(4, $permisosDoc);
 
         // Alumno: solo ver
-        $this->syncPermisos(5, [1,5,9,12,16]);
+        $permisosAlumno = [];
+        for ($i = 1; $i <= 44; $i++) {
+            $accion = (($i - 1) % 4);
+            if ($accion == 0) { $permisosAlumno[] = $i; }
+        }
+        $this->syncPermisos(5, $permisosAlumno);
     }
 
     private function syncPermisos(int $roleId, array $permisoIds): void

@@ -3,9 +3,9 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Livewire\Admin\MatrizPermisos;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\PermisoApiController;
+use App\Http\Controllers\PermisoController;
 
 Route::redirect('/', '/login');
 
@@ -14,8 +14,9 @@ Route::middleware(['auth'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::view('profile', 'profile')->name('profile');
 
-    // Ruta del módulo de permisos (Livewire standalone)
-    Route::get('/permisos', MatrizPermisos::class)->name('permisos.index');
+    // ===== MÓDULO DE PERMISOS (diseño original) =====
+    Route::get('/admin/permisos', [PermisoController::class, 'index'])->name('permisos.index');
+    Route::post('/admin/permisos', [PermisoController::class, 'update'])->name('permisos.update');
 
     // ===== API para el Dashboard (JavaScript) =====
     // Roles
@@ -24,7 +25,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/api/roles/{id}', [RolController::class, 'update'])->name('api.roles.update');
     Route::delete('/api/roles/{id}', [RolController::class, 'destroy'])->name('api.roles.destroy');
 
-    // Permisos
+    // Permisos API
     Route::get('/api/permisos', [PermisoApiController::class, 'index'])->name('api.permisos.index');
     Route::post('/api/permisos', [PermisoApiController::class, 'store'])->name('api.permisos.store');
 });

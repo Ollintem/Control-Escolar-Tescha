@@ -17,7 +17,7 @@
           brand: { 50: '#fce8ef', 100: '#f8edf1', 400: '#8c2448', 500: '#8b2346', 600: '#791e41', 700: '#6d1938', 800: '#56132d' },
           gold:  { 300: '#f5d891', 400: '#f4d894', 500: '#c96b00' },
           cream: '#f6f4f2',
-          ink:   '#243044'
+          ink:   '#8c2448'
         },
         keyframes: {
           modalIn: { '0%': { opacity: 0, transform: 'translateY(8px) scale(.985)' }, '100%': { opacity: 1, transform: 'translateY(0) scale(1)' } },
@@ -76,7 +76,7 @@
           <span>Usuarios y Roles</span>
         </button>
 
-        <button data-nav id="btn-permisos" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+        <button onclick="window.location.href='{{ url('/admin/permisos') }}'" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
           <i data-lucide="shield-half" class="w-[18px] h-[18px]"></i>
           <span>Módulo Permisos</span>
         </button>
@@ -556,7 +556,6 @@
 
     const btnDashboard = document.getElementById('btn-dashboard');
     const btnRoles = document.getElementById('btn-roles');
-    const btnPermisos = document.getElementById('btn-permisos');
 
     const ADMIN_ROLE_ID = 1;
 
@@ -1033,7 +1032,6 @@
     /* ---------- Eventos ---------- */
     btnDashboard.addEventListener('click', showDashboardView);
     btnRoles.addEventListener('click', showRolesView);
-    btnPermisos.addEventListener('click', () => showPermisosView());
 
     document.getElementById('role-search').addEventListener('input', event => renderRoles(event.target.value));
     document.getElementById('role-modal').addEventListener('click', event => {
