@@ -125,14 +125,14 @@
     </div>
 
     @if(session('success'))
-      <div class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-5 py-3.5 rounded-2xl mb-6 text-sm font-semibold shadow-sm flex items-center gap-2">
+      <div class="flash-msg bg-emerald-50 border border-emerald-200 text-emerald-700 px-5 py-3.5 rounded-2xl mb-6 text-sm font-semibold shadow-sm flex items-center gap-2">
         <i data-lucide="check-circle" class="w-5 h-5 text-emerald-500"></i>
         {{ session('success') }}
       </div>
     @endif
 
     @if(session('error'))
-      <div class="bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-2xl mb-6 text-sm font-semibold shadow-sm flex items-center gap-2">
+      <div class="flash-msg bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-2xl mb-6 text-sm font-semibold shadow-sm flex items-center gap-2">
         <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
         {{ session('error') }}
       </div>
@@ -214,6 +214,17 @@
 
   </main>
 
-  <script>lucide.createIcons();</script>
+  <script>
+    lucide.createIcons();
+    // Auto-ocultar mensajes flash después de 3 segundos
+    document.querySelectorAll('.flash-msg').forEach(function(el) {
+      setTimeout(function() {
+        el.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-6px)';
+        setTimeout(function() { el.remove(); }, 400);
+      }, 3000);
+    });
+  </script>
 </body>
 </html>

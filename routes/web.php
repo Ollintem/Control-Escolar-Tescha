@@ -3,8 +3,6 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RolController;
-use App\Http\Controllers\PermisoApiController;
 use App\Http\Controllers\PermisoController;
 
 Route::redirect('/', '/login');
@@ -18,16 +16,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/permisos', [PermisoController::class, 'index'])->name('permisos.index');
     Route::post('/admin/permisos', [PermisoController::class, 'update'])->name('permisos.update');
 
-    // ===== API para el Dashboard (JavaScript) =====
-    // Roles
-    Route::get('/api/roles', [RolController::class, 'index'])->name('api.roles.index');
-    Route::post('/api/roles', [RolController::class, 'store'])->name('api.roles.store');
-    Route::put('/api/roles/{id}', [RolController::class, 'update'])->name('api.roles.update');
-    Route::delete('/api/roles/{id}', [RolController::class, 'destroy'])->name('api.roles.destroy');
-
-    // Permisos API
-    Route::get('/api/permisos', [PermisoApiController::class, 'index'])->name('api.permisos.index');
-    Route::post('/api/permisos', [PermisoApiController::class, 'store'])->name('api.permisos.store');
 });
 
 // Ruta de acceso directo forzado
