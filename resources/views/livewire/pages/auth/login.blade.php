@@ -17,6 +17,13 @@ new #[Layout('layouts.guest')] class extends Component
 
         // 1. Intentar autenticación con Auth::attempt
         if (Auth::attempt(['email' => $this->form->email, 'password' => $this->form->password], $this->form->remember)) {
+            // Las cuentas inactivas no pueden iniciar sesión.
+            if (! Auth::user()->activo) {
+                Auth::logout();
+                $this->addError('form.email', 'Tu cuenta está inactiva. Contacta a Servicios Escolares para reactivarla.');
+                return;
+            }
+
             Session::regenerate();
             $this->redirect(route('dashboard', absolute: false));
             return;
@@ -26,6 +33,12 @@ new #[Layout('layouts.guest')] class extends Component
         $user = \App\Models\User::where('email', $this->form->email)->first();
 
         if ($user && Hash::check($this->form->password, $user->password)) {
+            // Las cuentas inactivas no pueden iniciar sesión (misma regla que arriba).
+            if (! $user->activo) {
+                $this->addError('form.email', 'Tu cuenta está inactiva. Contacta a Servicios Escolares para reactivarla.');
+                return;
+            }
+
             Auth::login($user, $this->form->remember);
             Session::regenerate();
             $this->redirect(route('dashboard', absolute: false));

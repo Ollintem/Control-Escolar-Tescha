@@ -107,6 +107,6 @@ class GestionCarreras extends Component
 
     public function render()
     {
-        return view('livewire.gestion-carreras');
+        return view('admin.carreras.index');
     }
 }

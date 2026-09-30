@@ -143,6 +143,6 @@ class GestionAlumnos extends Component
 
     public function render()
     {
-        return view('livewire.gestion-alumnos');
+        return view('admin.alumnos.index');
     }
 }

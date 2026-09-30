@@ -125,6 +125,6 @@ class GestionDocentes extends Component
 
     public function render()
     {
-        return view('livewire.gestion-docentes');
+        return view('admin.docentes.index');
     }
 }

@@ -253,6 +253,6 @@ class GestionMateriasPlan extends Component
 
     public function render()
     {
-        return view('livewire.gestion-materias-plan');
+        return view('admin.materias-plan.index');
     }
 }

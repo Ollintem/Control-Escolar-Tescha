@@ -162,11 +162,4 @@
       </div>
     </div>
   @endif
-
-  @script
-  <script>
-    // Re-inicializar iconos Lucide después de cada actualización de Livewire
-    lucide.createIcons();
-  </script>
-  @endscript
 </div>

@@ -241,6 +241,6 @@ class GestionSemestresPeriodos extends Component
 
     public function render()
     {
-        return view('livewire.gestion-semestres-periodos');
+        return view('admin.semestres-periodos.index');
     }
 }

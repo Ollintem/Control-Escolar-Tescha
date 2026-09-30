@@ -159,6 +159,6 @@ class GestionGrupos extends Component
 
     public function render()
     {
-        return view('livewire.gestion-grupos');
+        return view('admin.grupos.index');
     }
 }

@@ -122,6 +122,6 @@ class GestionRoles extends Component
 
     public function render()
     {
-        return view('livewire.gestion-roles');
+        return view('admin.roles.index');
     }
 }

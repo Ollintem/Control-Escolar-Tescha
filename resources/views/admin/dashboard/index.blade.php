@@ -443,6 +443,27 @@
   <script>
     lucide.createIcons();
 
+    /* ===== Lucide × Livewire: reinicialización GLOBAL de íconos =====
+       Livewire 3 "morfa" el DOM después de cada petición y reintegra en la
+       página los <i data-lucide> originales del HTML del servidor. Esos
+       placeholders están vacíos, así que si nadie vuelve a procesarlos el
+       ícono desaparece (el botón sigue funcionando). Este hook centralizado
+       los reprocesa tras cada morph, agrupando las llamadas en un solo
+       requestAnimationFrame para evitar inicializaciones duplicadas. */
+    let iconosLucidePendientes = false;
+    function refrescarIconosLucide() {
+      if (iconosLucidePendientes) return;
+      iconosLucidePendientes = true;
+      requestAnimationFrame(function () {
+        iconosLucidePendientes = false;
+        if (window.lucide) lucide.createIcons();
+      });
+    }
+    // "morphed": se dispara cuando Livewire termina de actualizar el DOM de un componente
+    document.addEventListener('livewire:init', function () {
+      Livewire.hook('morphed', refrescarIconosLucide);
+    });
+
     /* ---------- Sidebar móvil ---------- */
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');

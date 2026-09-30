@@ -67,6 +67,6 @@ class MatrizPermisosDashboard extends Component
 
     public function render()
     {
-        return view('livewire.matriz-permisos-dashboard');
+        return view('admin.permisos.matriz');
     }
 }

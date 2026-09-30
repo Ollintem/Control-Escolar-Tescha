@@ -13,8 +13,12 @@ class JefeCarrera extends Model
     protected $primaryKey = 'id_jefe_carrera';
 
     protected $fillable = [
+        'nombre',
+        'apellido_paterno',
+        'apellido_materno',
+        'no_empleado',
+        'email',
         'id_carrera',
-        'id_docente',
         'fecha_inicio',
         'fecha_fin',
         'activo',
@@ -23,10 +27,5 @@ class JefeCarrera extends Model
     public function carrera()
     {
         return $this->belongsTo(Carrera::class, 'id_carrera', 'id_carrera');
-    }
-
-    public function docente()
-    {
-        return $this->belongsTo(Docente::class, 'id_docente', 'id_docente');
     }
 }

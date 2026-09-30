@@ -131,8 +131,6 @@
 
 @script
 <script>
-  // Re-inicializar iconos Lucide después de cada actualización de Livewire
-  lucide.createIcons();
 
   // Auto-ocultar mensajes flash después de 3 segundos
   document.querySelectorAll('.flash-msg').forEach(function(el) {
