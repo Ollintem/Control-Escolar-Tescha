@@ -389,7 +389,26 @@
 
         <!-- VISTA GESTIÓN DE USUARIOS Y ROLES (Livewire) -->
         <div id="view-roles" class="view-panel hidden">
-          @livewire('gestion-roles')
+          <!-- Sub-navegación: Usuarios | Roles (componentes independientes) -->
+          <div class="flex flex-wrap items-center gap-2 mb-5">
+            <button type="button" id="tab-btn-usuarios" onclick="mostrarTabUsuariosRoles('usuarios')"
+              class="tab-ur inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-[13px] font-bold transition-all duration-200 text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)]">
+              <i data-lucide="user-cog" class="w-4 h-4"></i>
+              Usuarios
+            </button>
+            <button type="button" id="tab-btn-roles" onclick="mostrarTabUsuariosRoles('roles')"
+              class="tab-ur inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-[13px] font-bold transition-all duration-200 border border-[#e8e4e1] bg-white text-[#748095] hover:text-brand-700">
+              <i data-lucide="shield" class="w-4 h-4"></i>
+              Roles
+            </button>
+          </div>
+
+          <div id="tab-usuarios">
+            @livewire('gestion-usuarios')
+          </div>
+          <div id="tab-roles" class="hidden">
+            @livewire('gestion-roles')
+          </div>
         </div>
 
         <!-- VISTA MATRIZ DE PERMISOS (Livewire) -->
@@ -610,6 +629,29 @@
       breadcrumbTitle.textContent = 'Gestión de Grupos';
       setActiveButton(btnGrupos);
       closeSidebar();
+    }
+
+    /* ---------- Tabs Usuarios / Roles (dentro de "Usuarios y Roles") ---------- */
+    function aplicarTabUsuariosRoles(btn, activo) {
+      // Estado activo: gradiente de marca. Estado inactivo: fondo blanco.
+      btn.classList.toggle('text-white', activo);
+      btn.classList.toggle('bg-gradient-to-br', activo);
+      btn.classList.toggle('from-brand-500', activo);
+      btn.classList.toggle('to-brand-700', activo);
+      btn.classList.toggle('shadow-[0_7px_16px_rgba(109,25,56,.18)]', activo);
+      btn.classList.toggle('border', !activo);
+      btn.classList.toggle('border-[#e8e4e1]', !activo);
+      btn.classList.toggle('bg-white', !activo);
+      btn.classList.toggle('text-[#748095]', !activo);
+      btn.classList.toggle('hover:text-brand-700', !activo);
+    }
+
+    function mostrarTabUsuariosRoles(tab) {
+      const esUsuarios = tab === 'usuarios';
+      document.getElementById('tab-usuarios').classList.toggle('hidden', !esUsuarios);
+      document.getElementById('tab-roles').classList.toggle('hidden', esUsuarios);
+      aplicarTabUsuariosRoles(document.getElementById('tab-btn-usuarios'), esUsuarios);
+      aplicarTabUsuariosRoles(document.getElementById('tab-btn-roles'), !esUsuarios);
     }
 
     /* ---------- Eventos ---------- */

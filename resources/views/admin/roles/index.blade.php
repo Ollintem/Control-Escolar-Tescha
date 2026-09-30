@@ -1,6 +1,6 @@
 <div>
   <!-- Header -->
-  <h1 class="m-0 text-[#202b3d] text-[26px] md:text-[29px] tracking-tight">Gestión de usuarios y roles</h1>
+  <h1 class="m-0 text-[#202b3d] text-[26px] md:text-[29px] tracking-tight">Gestión de roles</h1>
   <p class="mt-1.5 mb-6 text-[#748095] text-sm">Administra los perfiles del sistema y configura los permisos de acceso para cada rol.</p>
 
   <!-- Barra de búsqueda y botón -->
