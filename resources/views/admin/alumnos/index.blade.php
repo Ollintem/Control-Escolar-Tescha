@@ -145,7 +145,7 @@
                     class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
                     <i data-lucide="pencil" class="w-4 h-4"></i>
                   </button>
-                  <button wire:click="eliminar({{ $alu['id_alumno'] }})" wire:confirm="¿Eliminar este alumno?"
+                  <button wire:click="eliminar({{ $alu['id_alumno'] }})" wire:confirm="¿Eliminar este alumno? Si tiene información relacionada se desactivará en su lugar."
                     title="Eliminar alumno"
                     class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
                     <i data-lucide="trash-2" class="w-4 h-4"></i>

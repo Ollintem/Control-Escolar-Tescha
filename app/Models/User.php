@@ -71,6 +71,37 @@ class User extends Authenticatable
     }
 
     /**
+     * Ruta del panel que le corresponde al usuario según su rol.
+     *
+     * Es la ÚNICA FUENTE de redirección por rol: la usan el login, el
+     * middleware "guest" (usuario autenticado que visita /login) y cualquier
+     * otro punto que necesite saber "a dónde va este usuario".
+     *
+     * - Se resuelve por el NOMBRE real del rol (roles.nombre vía FK_id_rol),
+     *   NUNCA por IDs fijos ni por la columna legacy users.rol.
+     * - Panel propio: Administrador -> /dashboard, Alumno -> /panel/alumno,
+     *   Docente -> /panel/docente, Jefe de Carrera -> /panel/jefe-carrera,
+     *   Control Escolar -> /panel/control-escolar.
+     * - El default es /profile por seguridad: jamás se manda a un panel que
+     *   el usuario no podría ver.
+     * - El default es /profile por seguridad: jamás se manda a un panel que
+     *   el usuario no podría ver.
+     */
+    public function rutaPanel(): string
+    {
+        $rol = mb_strtolower(trim((string) ($this->role?->nombre ?? '')));
+
+        return match ($rol) {
+            'administrador' => '/dashboard',
+            'alumno' => '/panel/alumno',
+            'docente' => '/panel/docente',
+            'jefe de carrera' => '/panel/jefe-carrera',
+            'control escolar' => '/panel/control-escolar',
+            default => '/profile',
+        };
+    }
+
+    /**
      * Consulta centralizada y reutilizable de la Matriz de Permisos:
      *
      *     $user->tienePermiso('Docentes', 'editar');

@@ -25,7 +25,9 @@ new #[Layout('layouts.guest')] class extends Component
             }
 
             Session::regenerate();
-            $this->redirect(route('dashboard', absolute: false));
+            // Redirección por rol real (roles.nombre): Admin → /dashboard,
+            // Alumno → /panel/alumno, resto → /profile.
+            $this->redirect(Auth::user()->rutaPanel());
             return;
         }
 
@@ -41,7 +43,9 @@ new #[Layout('layouts.guest')] class extends Component
 
             Auth::login($user, $this->form->remember);
             Session::regenerate();
-            $this->redirect(route('dashboard', absolute: false));
+            // Redirección por rol real (roles.nombre): Admin → /dashboard,
+            // Alumno → /panel/alumno, resto → /profile.
+            $this->redirect(Auth::user()->rutaPanel());
             return;
         }
 

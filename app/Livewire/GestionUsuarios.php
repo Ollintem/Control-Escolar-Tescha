@@ -2,9 +2,6 @@
 
 namespace App\Livewire;
 
-use App\Models\Alumno;
-use App\Models\Docente;
-use App\Models\JefeCarrera;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +13,18 @@ use Livewire\Component;
 /**
  * Gestion de CUENTAS DE USUARIO del Panel del Administrador.
  *
- * Una cuenta NO es una persona academica: este modulo nunca crea docentes,
- * jefes de carrera ni alumnos. Solo vincula la cuenta a una persona que ya
- * exista y que aun no este vinculada a otra cuenta (los vinculos son UNIQUE).
+ * Una cuenta NO es una persona academica: este modulo solo administra
+ * nombre, correo, contrasena, rol y estado.
+ *
+ * - NO crea ni vincula personas: los campos de persona se eliminaron del
+ *   formulario. En ALTA las columnas id_docente/id_jefe_carrera/id_alumno
+ *   quedan NULL (omision); en EDICION no se tocan (se conserva cualquier
+ *   vinculo heredado). La columna "Persona vinculada" del listado es solo
+ *   informativa (lectura NULL-safe).
+ *
+ * - Solo puede existir UNA cuenta con rol Administrador: la opcion no
+ *   aparece en el selector y ademas el servidor la rechaza aunque la
+ *   pagina se manipule (la cuenta existente puede conservar su rol).
  *
  * Fuente oficial del rol: users.FK_id_rol -> roles.id_rol (tabla roles).
  * La columna ENUM legacy users.rol NO se escribe ni se usa en ninguna logica.
@@ -36,7 +42,8 @@ class GestionUsuarios extends Component
     public $search = '';
     public $userCount = 0;
 
-    // Catalogo de roles (fuente oficial: tabla roles)
+    // Catalogo de roles (fuente oficial: tabla roles). NUNCA incluye
+    // "Administrador": solo se permite una cuenta con ese rol.
     public $roles = [];
 
     // Modal Crear / Editar
@@ -48,14 +55,10 @@ class GestionUsuarios extends Component
     public $password_confirmation = '';
     public $rolId = '';
     public $activo = true;
-    public $idDocente = '';
-    public $idJefeCarrera = '';
-    public $idAlumno = '';
 
-    // Personas disponibles (solo las NO vinculadas a otra cuenta)
-    public $docentesDisponibles = [];
-    public $jefesDisponibles = [];
-    public $alumnosDisponibles = [];
+    // true solo al editar la cuenta que YA tiene el rol Administrador
+    // (el rol se muestra en solo lectura; no se puede elegir ni cambiar).
+    public $esCuentaAdministrador = false;
 
     // Modal de restablecer contrasena
     public $showPasswordModal = false;
@@ -66,12 +69,12 @@ class GestionUsuarios extends Component
     public function mount(): void
     {
         $this->roles = Role::where('activo', 1)
+            ->where('nombre', '<>', 'Administrador')
             ->orderBy('id_rol')
             ->get(['id_rol', 'nombre'])
             ->toArray();
 
         $this->cargarUsuarios();
-        $this->cargarPersonasDisponibles();
     }
 
     public function cargarUsuarios(): void
@@ -109,7 +112,8 @@ class GestionUsuarios extends Component
     }
 
     /**
-     * Texto descriptivo de la persona vinculada para el listado.
+     * Texto descriptivo de la persona vinculada para el listado (solo
+     * lectura informativa: este modulo no gestiona los vinculos).
      */
     private function textoPersona(User $u): ?string
     {
@@ -137,78 +141,11 @@ class GestionUsuarios extends Component
         return null;
     }
 
-    /**
-     * Carga las personas disponibles para los selectores, excluyendo las que
-     * ya estan vinculadas a OTRA cuenta (los vinculos son UNIQUE). Al editar,
-     * el vinculo actual de la cuenta en edicion se conserva en la lista.
-     */
-    public function cargarPersonasDisponibles(): void
-    {
-        $vinculados = fn (string $columna) => User::query()
-            ->whereNotNull($columna)
-            ->when($this->editingUserId, fn ($q) => $q->where('id', '<>', $this->editingUserId))
-            ->pluck($columna);
-
-        $this->docentesDisponibles = Docente::orderBy('nombre')
-            ->whereNotIn('id_docente', $vinculados('id_docente'))
-            ->get()
-            ->map(fn (Docente $d) => [
-                'id' => $d->id_docente,
-                'etiqueta' => trim($d->nombre . ' ' . $d->apellido_paterno . ' ' . $d->apellido_materno)
-                    . ' · Núm. empleado ' . $d->no_empleado
-                    . ' · ' . $d->email,
-            ])
-            ->toArray();
-
-        $this->jefesDisponibles = JefeCarrera::orderBy('nombre')
-            ->whereNotIn('id_jefe_carrera', $vinculados('id_jefe_carrera'))
-            ->get()
-            ->map(fn (JefeCarrera $j) => [
-                'id' => $j->id_jefe_carrera,
-                'etiqueta' => trim($j->nombre . ' ' . $j->apellido_paterno . ' ' . $j->apellido_materno)
-                    . ' · Núm. empleado ' . $j->no_empleado
-                    . ' · ' . $j->email,
-            ])
-            ->toArray();
-
-        $this->alumnosDisponibles = Alumno::orderBy('nombre')
-            ->whereNotIn('id_alumno', $vinculados('id_alumno'))
-            ->get()
-            ->map(fn (Alumno $a) => [
-                'id' => $a->id_alumno,
-                'etiqueta' => trim($a->nombre . ' ' . $a->apellido_paterno . ' ' . $a->apellido_materno)
-                    . ' · Núm. control ' . $a->no_control
-                    . ' · ' . $a->email,
-            ])
-            ->toArray();
-    }
-
-    /**
-     * Nombre del rol actualmente seleccionado en el formulario, resuelto
-     * siempre contra la tabla roles (nunca contra el ENUM legacy).
-     */
-    public function nombreRolSeleccionado(): ?string
-    {
-        if ($this->rolId === '' || $this->rolId === null) {
-            return null;
-        }
-
-        $rol = collect($this->roles)->firstWhere('id_rol', $this->rolId);
-
-        if ($rol !== null) {
-            return $rol['nombre'];
-        }
-
-        // Rol existente pero inactivo (no aparece en el select).
-        return Role::find($this->rolId)?->nombre;
-    }
-
     public function abrirModalCrear(): void
     {
         $this->exigirPermiso('crear');
 
         $this->resetForm();
-        $this->cargarPersonasDisponibles();
         $this->showPasswordModal = false;
         $this->showModal = true;
     }
@@ -225,11 +162,8 @@ class GestionUsuarios extends Component
         $this->email = $usuario->email;
         $this->rolId = (string) $usuario->FK_id_rol;
         $this->activo = (bool) $usuario->activo;
-        $this->idDocente = $usuario->id_docente !== null ? (string) $usuario->id_docente : '';
-        $this->idJefeCarrera = $usuario->id_jefe_carrera !== null ? (string) $usuario->id_jefe_carrera : '';
-        $this->idAlumno = $usuario->id_alumno !== null ? (string) $usuario->id_alumno : '';
+        $this->esCuentaAdministrador = $usuario->role?->nombre === 'Administrador';
 
-        $this->cargarPersonasDisponibles();
         $this->showPasswordModal = false;
         $this->showModal = true;
     }
@@ -253,20 +187,43 @@ class GestionUsuarios extends Component
 
         $this->validate($reglas, $this->mensajesValidacion());
 
-        // Proteccion de la cuenta autenticada: no puede cambiar su propio rol
-        // (evita quedarse sin rol o desvincular su rol de Administrador).
-        if ($this->editingUserId !== null) {
-            $usuario = User::findOrFail($this->editingUserId);
+        $usuario = $this->editingUserId !== null ? User::findOrFail($this->editingUserId) : null;
 
-            if ($usuario->id === (int) Auth::id() && (int) $this->rolId !== (int) $usuario->FK_id_rol) {
+        // Proteccion de la cuenta autenticada (Etapa 3, punto 12):
+        // no puede cambiar su propio rol ni desactivarse desde la edicion.
+        if ($usuario !== null && $usuario->id === (int) Auth::id()) {
+            if ((int) $this->rolId !== (int) $usuario->FK_id_rol) {
                 $this->addError('rolId', 'No puedes cambiar el rol de la cuenta con la que has iniciado sesión.');
+
+                return;
+            }
+
+            if (! (bool) $this->activo) {
+                $this->addError('activo', 'No puedes desactivar tu propia cuenta.');
 
                 return;
             }
         }
 
-        if (! $this->validarVinculos()) {
-            return;
+        // RESTRICCION INTERNA: solo puede existir UN Administrador.
+        // El rol "Administrador" no aparece en el selector, pero aunque la
+        // pagina se manipule y llegue aqui, solo se acepta si la cuenta en
+        // edicion YA lo tiene (valor sin cambios); nunca se lo asigna a
+        // otra cuenta ni a una cuenta nueva.
+        $rol = Role::findOrFail((int) $this->rolId);
+
+        if ($rol->nombre === 'Administrador') {
+            $esLaCuentaAdministradora = $usuario !== null
+                && (int) $usuario->FK_id_rol === (int) $rol->id_rol;
+
+            if (! $esLaCuentaAdministradora) {
+                $this->addError(
+                    'rolId',
+                    'Solo se permite una cuenta Administrador en el sistema: este rol no puede asignarse.'
+                );
+
+                return;
+            }
         }
 
         $datos = [
@@ -274,9 +231,6 @@ class GestionUsuarios extends Component
             'email' => $this->email,
             'activo' => (bool) $this->activo,
             'FK_id_rol' => (int) $this->rolId,
-            'id_docente' => $this->idDocente === '' ? null : (int) $this->idDocente,
-            'id_jefe_carrera' => $this->idJefeCarrera === '' ? null : (int) $this->idJefeCarrera,
-            'id_alumno' => $this->idAlumno === '' ? null : (int) $this->idAlumno,
             // NOTA: la columna ENUM legacy users.rol NO se escribe aqui.
             // Aplica su DEFAULT del esquema y no se usa para autorizacion
             // (fuente oficial: FK_id_rol -> roles.id_rol).
@@ -285,10 +239,20 @@ class GestionUsuarios extends Component
         $isEditing = $this->editingUserId !== null;
 
         if ($isEditing) {
+            // Las columnas de persona NO se gestionan en este formulario:
+            // se conservan tal cual. Unica excepcion: roles sin persona
+            // (Administrador / Control Escolar) normalizan a NULL (Etapa 3).
+            if (! in_array($rol->nombre, ['Docente', 'Jefe de Carrera', 'Alumno'], true)) {
+                $datos['id_docente'] = null;
+                $datos['id_jefe_carrera'] = null;
+                $datos['id_alumno'] = null;
+            }
+
             // La contrasena NUNCA se toca desde este formulario.
             $usuario->fill($datos)->save();
         } else {
             // El cast 'hashed' del modelo convierte el texto plano a hash (bcrypt).
+            // Las columnas de persona se omiten: quedan NULL (nullable).
             $datos['password'] = $this->password;
             User::create($datos);
         }
@@ -296,101 +260,8 @@ class GestionUsuarios extends Component
         $this->showModal = false;
         $this->resetForm();
         $this->cargarUsuarios();
-        $this->cargarPersonasDisponibles();
 
         session()->flash('success', $isEditing ? 'Usuario actualizado correctamente.' : 'Usuario creado exitosamente.');
-    }
-
-    /**
-     * Reglas de coherencia rol <-> persona:
-     *
-     * - Docente            -> exige id_docente; limpia id_jefe_carrera e id_alumno.
-     * - Jefe de Carrera    -> exige id_jefe_carrera; limpia id_docente e id_alumno.
-     * - Alumno             -> exige id_alumno; limpia id_docente e id_jefe_carrera.
-     * - Administrador /
-     *   Control Escolar    -> fuerza los tres vinculos a NULL (sin persona).
-     *
-     * Cada vinculo ademas debe: existir en su tabla y NO estar ya vinculado
-     * a otra cuenta (una persona = una cuenta; la BD tambien lo garantiza
-     * con claves UNIQUE).
-     */
-    private function validarVinculos(): bool
-    {
-        $nombreRol = $this->nombreRolSeleccionado();
-
-        if (! in_array($nombreRol, ['Docente', 'Jefe de Carrera', 'Alumno'], true)) {
-            // Administrador y Control Escolar: normalizacion obligatoria a NULL.
-            $this->idDocente = '';
-            $this->idJefeCarrera = '';
-            $this->idAlumno = '';
-
-            return true;
-        }
-
-        if ($nombreRol === 'Docente') {
-            $this->idJefeCarrera = '';
-            $this->idAlumno = '';
-
-            return $this->validarPersona(
-                'idDocente',
-                Docente::class,
-                'id_docente',
-                'Debes seleccionar un docente para el rol Docente.'
-            );
-        }
-
-        if ($nombreRol === 'Jefe de Carrera') {
-            $this->idDocente = '';
-            $this->idAlumno = '';
-
-            return $this->validarPersona(
-                'idJefeCarrera',
-                JefeCarrera::class,
-                'id_jefe_carrera',
-                'Debes seleccionar un jefe de carrera para el rol Jefe de Carrera.'
-            );
-        }
-
-        // Alumno
-        $this->idDocente = '';
-        $this->idJefeCarrera = '';
-
-        return $this->validarPersona(
-            'idAlumno',
-            Alumno::class,
-            'id_alumno',
-            'Debes seleccionar un alumno para el rol Alumno.'
-        );
-    }
-
-    private function validarPersona(string $propiedad, string $modelo, string $columna, string $mensajeVacio): bool
-    {
-        $valor = $this->{$propiedad};
-
-        if ($valor === '' || $valor === null) {
-            $this->addError($propiedad, $mensajeVacio);
-
-            return false;
-        }
-
-        if (! $modelo::whereKey($valor)->exists()) {
-            $this->addError($propiedad, 'La persona seleccionada no existe.');
-
-            return false;
-        }
-
-        $enOtraCuenta = User::query()
-            ->where($columna, $valor)
-            ->when($this->editingUserId, fn ($q) => $q->where('id', '<>', $this->editingUserId))
-            ->exists();
-
-        if ($enOtraCuenta) {
-            $this->addError($propiedad, 'Esa persona ya está vinculada a otra cuenta de usuario.');
-
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -477,9 +348,7 @@ class GestionUsuarios extends Component
         $this->password_confirmation = '';
         $this->rolId = '';
         $this->activo = true;
-        $this->idDocente = '';
-        $this->idJefeCarrera = '';
-        $this->idAlumno = '';
+        $this->esCuentaAdministrador = false;
     }
 
     /**
@@ -518,8 +387,6 @@ class GestionUsuarios extends Component
     {
         $this->exigirPermiso('ver');
 
-        return view('admin.usuarios.index', [
-            'nombreRolSeleccionado' => $this->nombreRolSeleccionado(),
-        ]);
+        return view('admin.usuarios.index');
     }
 }

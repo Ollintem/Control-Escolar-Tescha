@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use Livewire\Component;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use App\Models\Alumno;
 use App\Models\Carrera;
 
@@ -124,13 +126,96 @@ class GestionAlumnos extends Component
             : 'Alumno registrado exitosamente.');
     }
 
+    /**
+     * Eliminar alumno de forma segura.
+     *
+     * FKs que apuntan a la tabla alumnos:
+     *   - users.id_alumno             -> RESTRICT (provocaba el error 500)
+     *   - inscripciones.id_alumno     -> CASCADE (borrado destructivo de datos)
+     *   - historial_academico         -> CASCADE (idem)
+     *   - avance_creditos             -> CASCADE (idem)
+     *
+     * Por eso: si el alumno tiene cualquier informacion relacionada NO se
+     * borra; se desactiva en su lugar y se explica con un mensaje claro.
+     * Solo se elimina cuando no existe nada vinculado. Cualquier restriccion
+     * inesperada de la BD se traduce a un mensaje (nunca un error 500).
+     */
     public function eliminar($alumnoId)
     {
         $alumno = Alumno::findOrFail($alumnoId);
-        $alumno->delete();
-        $this->cargarAlumnos();
 
-        session()->flash('success', 'Alumno eliminado correctamente.');
+        $relaciones = $this->relacionesDelAlumno($alumno);
+
+        if ($relaciones !== []) {
+            if ($alumno->activo) {
+                $alumno->activo = false;
+                $alumno->save();
+                $estado = 'Se desactivó en su lugar para conservar sus datos.';
+            } else {
+                $estado = 'El alumno se conserva inactivo para preservar su información.';
+            }
+
+            $this->cargarAlumnos();
+
+            session()->flash(
+                'error',
+                'No se puede eliminar al alumno porque tiene información relacionada: '
+                . implode(', ', $relaciones) . '. ' . $estado
+            );
+
+            return;
+        }
+
+        try {
+            $alumno->delete();
+            session()->flash('success', 'Alumno eliminado correctamente.');
+        } catch (QueryException $e) {
+            // Red de seguridad: cualquier violacion de integridad se muestra
+            // como mensaje entendible en lugar de romper la pagina.
+            if ($e->getCode() === '23000') {
+                if ($alumno->activo) {
+                    $alumno->activo = false;
+                    $alumno->save();
+                }
+
+                session()->flash(
+                    'error',
+                    'No se pudo eliminar al alumno porque está vinculado a otros registros. '
+                    . 'Se desactivó en su lugar para conservar sus datos.'
+                );
+            } else {
+                session()->flash('error', 'No se pudo eliminar el alumno. No se modificó ningún dato.');
+            }
+        }
+
+        $this->cargarAlumnos();
+    }
+
+    /**
+     * Tablas hijas con FK directa hacia alumnos y sus conteos.
+     */
+    private function relacionesDelAlumno(Alumno $alumno): array
+    {
+        $id = $alumno->id_alumno;
+        $relaciones = [];
+
+        if (DB::table('users')->where('id_alumno', $id)->exists()) {
+            $relaciones[] = 'cuenta de usuario';
+        }
+
+        if (DB::table('inscripciones')->where('id_alumno', $id)->exists()) {
+            $relaciones[] = 'inscripciones';
+        }
+
+        if (DB::table('historial_academico')->where('id_alumno', $id)->exists()) {
+            $relaciones[] = 'histórico académico';
+        }
+
+        if (DB::table('avance_creditos')->where('id_alumno', $id)->exists()) {
+            $relaciones[] = 'avance de créditos';
+        }
+
+        return $relaciones;
     }
 
     public function toggleActivo($alumnoId)

@@ -22,6 +22,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Toda petición web (tras iniciar sesión/cookies) valida que la cuenta
         // esté activa: usuarios con activo = 0 no pueden usar el sistema.
         $middleware->web(append: [UsuarioActivo::class]);
+
+        // Un usuario AUTENTICADO que visita una ruta de invitado (/login)
+        // vuelve a SU panel, no a /dashboard. Se resuelve por el nombre del
+        // rol (User::rutaPanel), nunca por IDs.
+        $middleware->redirectUsersTo(
+            fn (Request $request) => $request->user()?->rutaPanel() ?? '/'
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

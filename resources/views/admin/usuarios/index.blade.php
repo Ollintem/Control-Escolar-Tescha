@@ -1,7 +1,7 @@
 <div>
   <!-- Header -->
   <h1 class="m-0 text-[#202b3d] text-[26px] md:text-[29px] tracking-tight">Gestión de usuarios</h1>
-  <p class="mt-1.5 mb-6 text-[#748095] text-sm">Administra las cuentas de acceso al sistema TESCHA: rol, persona vinculada y estado de cada cuenta.</p>
+  <p class="mt-1.5 mb-6 text-[#748095] text-sm">Administra las cuentas de acceso al sistema TESCHA: nombre, correo, rol y estado de cada cuenta.</p>
 
   <!-- Barra de búsqueda y botón -->
   <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_8px_22px_rgba(31,38,50,.045)]">
@@ -239,14 +239,25 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div class="mb-2">
               <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Rol <span class="text-red-500">*</span></label>
-              <select wire:model.live="rolId"
-                class="w-full bg-white py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
-                <option value="">— Selecciona un rol —</option>
-                @foreach($roles as $rol)
-                  <option value="{{ $rol['id_rol'] }}" @selected($rolId == $rol['id_rol'])>{{ $rol['nombre'] }}</option>
-                @endforeach
-              </select>
-              @error('rolId') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+              @if($esCuentaAdministrador)
+                {{-- Solo existe una cuenta Administrador: el rol se muestra en
+                     solo lectura (no se puede elegir ni asignar a otra cuenta). --}}
+                <div class="w-full flex items-center gap-2 py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] bg-[#faf9f8] text-[#293448] font-medium text-[13px]">
+                  <i data-lucide="shield-check" class="w-4 h-4 shrink-0 text-gold-500"></i>
+                  <span>Administrador</span>
+                  <span class="ml-auto text-[9px] font-extrabold text-gold-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">ROL ÚNICO</span>
+                </div>
+                <p class="mt-1.5 mb-0 text-[#99a2b0] text-[11px]">Solo existe una cuenta Administrador en el sistema: su rol no puede cambiarse ni asignarse a otra cuenta.</p>
+              @else
+                <select wire:model.live="rolId"
+                  class="w-full bg-white py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                  <option value="">— Selecciona un rol —</option>
+                  @foreach($roles as $rol)
+                    <option value="{{ $rol['id_rol'] }}" @selected($rolId == $rol['id_rol'])>{{ $rol['nombre'] }}</option>
+                  @endforeach
+                </select>
+                @error('rolId') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+              @endif
             </div>
             <div class="mb-2 flex items-end pb-2.5">
               <label class="inline-flex items-center gap-2 cursor-pointer">
@@ -257,63 +268,11 @@
           </div>
           @error('activo') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
 
-          {{-- Vínculo de persona según el rol seleccionado (tabla roles) --}}
-          @if($nombreRolSeleccionado === 'Docente' || $nombreRolSeleccionado === 'Jefe de Carrera' || $nombreRolSeleccionado === 'Alumno')
-            <div class="mt-2">
-              <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">
-                @if($nombreRolSeleccionado === 'Docente') Docente vinculado
-                @elseif($nombreRolSeleccionado === 'Jefe de Carrera') Jefe de carrera vinculado
-                @else Alumno vinculado
-                @endif
-                <span class="text-red-500">*</span>
-              </label>
-
-              @if($nombreRolSeleccionado === 'Docente')
-                <select wire:model="idDocente"
-                  class="w-full bg-white py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
-                  <option value="">— Selecciona un docente —</option>
-                  @foreach($docentesDisponibles as $persona)
-                    <option value="{{ $persona['id'] }}">{{ $persona['etiqueta'] }}</option>
-                  @endforeach
-                </select>
-                @error('idDocente') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                @if(empty($docentesDisponibles))
-                  <p class="mt-1 mb-0 text-[#99a2b0] text-[11px]">No hay docentes disponibles: si aún no existen, regístralos primero desde el módulo Docentes.</p>
-                @endif
-              @elseif($nombreRolSeleccionado === 'Jefe de Carrera')
-                <select wire:model="idJefeCarrera"
-                  class="w-full bg-white py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
-                  <option value="">— Selecciona un jefe de carrera —</option>
-                  @foreach($jefesDisponibles as $persona)
-                    <option value="{{ $persona['id'] }}">{{ $persona['etiqueta'] }}</option>
-                  @endforeach
-                </select>
-                @error('idJefeCarrera') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                @if(empty($jefesDisponibles))
-                  <p class="mt-1 mb-0 text-[#99a2b0] text-[11px]">No hay jefes de carrera disponibles: si aún no existen, regístralos primero desde el módulo Jefes de Carrera.</p>
-                @endif
-              @else
-                <select wire:model="idAlumno"
-                  class="w-full bg-white py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
-                  <option value="">— Selecciona un alumno —</option>
-                  @foreach($alumnosDisponibles as $persona)
-                    <option value="{{ $persona['id'] }}">{{ $persona['etiqueta'] }}</option>
-                  @endforeach
-                </select>
-                @error('idAlumno') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                @if(empty($alumnosDisponibles))
-                  <p class="mt-1 mb-0 text-[#99a2b0] text-[11px]">No hay alumnos disponibles: si aún no existen, regístralos primero desde el módulo Alumnos.</p>
-                @endif
-              @endif
-
-              <p class="mt-1.5 mb-0 text-[#99a2b0] text-[11px]">Solo aparecen personas que aún no están vinculadas a otra cuenta (1 persona = 1 cuenta).</p>
-            </div>
-          @elseif($nombreRolSeleccionado === 'Administrador' || $nombreRolSeleccionado === 'Control Escolar')
-            <div class="mt-3 flex items-start gap-2 p-3 rounded-[10px] bg-[#f6f4f2] border border-[#ece9e6] text-[#748095] text-[11px]">
-              <i data-lucide="info" class="w-4 h-4 shrink-0 text-brand-500"></i>
-              <span>Este rol no requiere persona vinculada: los vínculos se guardan vacíos (NULL). Este módulo nunca crea docentes, jefes ni alumnos.</span>
-            </div>
-          @endif
+          {{-- Este modulo solo gestiona cuentas: no crea ni vincula personas --}}
+          <div class="mt-3 flex items-start gap-2 p-3 rounded-[10px] bg-[#f6f4f2] border border-[#ece9e6] text-[#748095] text-[11px]">
+            <i data-lucide="info" class="w-4 h-4 shrink-0 text-brand-500"></i>
+            <span>Este módulo solo gestiona cuentas de acceso: no crea ni vincula personas. Los vínculos existentes con docentes, jefes o alumnos (si los hay) se conservan sin cambios.</span>
+          </div>
         </div>
         <div class="flex justify-end gap-2 px-6 pb-6 pt-2 border-t border-[#eeeae8] mt-2">
           <button type="button" wire:click="$set('showModal', false)"
