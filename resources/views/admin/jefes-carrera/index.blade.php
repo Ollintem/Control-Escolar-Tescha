@@ -9,11 +9,13 @@
       <i data-lucide="search" class="w-[17px]"></i>
       <input type="search" wire:model.live="search" placeholder="Buscar por nombre, carrera o número de empleado..." class="w-full border-0 outline-none bg-transparent text-[#253146] text-[13px] font-medium">
     </div>
-    <button type="button" wire:click="abrirModalCrear"
-      class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
-      <i data-lucide="plus" class="w-4 h-4"></i>
-      Nuevo Jefe de Carrera
-    </button>
+    @if($puedeCrear)
+      <button type="button" wire:click="abrirModalCrear"
+        class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Nuevo Jefe de Carrera
+      </button>
+    @endif
   </div>
 
   <!-- Mensajes flash (se ocultan automáticamente en 3s) -->
@@ -30,6 +32,11 @@
       {{ session('error') }}
     </div>
   @endif
+
+  <div class="mt-4 flex items-start gap-2 rounded-[11px] border border-amber-200 bg-amber-50 px-4 py-3 text-[#79520e] text-[12px] leading-5">
+    <i data-lucide="info" class="mt-0.5 h-4 w-4 shrink-0 text-amber-600"></i>
+    <span>Desactivar el perfil de Jefe de Carrera no desactiva su cuenta de acceso. La cuenta vinculada seguirá activa y podrá iniciar sesión.</span>
+  </div>
 
   <!-- Estadísticas rápidas -->
   <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
@@ -148,15 +155,27 @@
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed]">
                 <div class="flex gap-1.5">
-                  <button wire:click="abrirModalEditar({{ $jefe['id_jefe_carrera'] }})" title="Editar Jefe de Carrera"
-                    class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
-                    <i data-lucide="pencil" class="w-4 h-4"></i>
-                  </button>
-                  <button wire:click="eliminar({{ $jefe['id_jefe_carrera'] }})" wire:confirm="¿Eliminar este Jefe de Carrera?"
-                    title="Eliminar Jefe de Carrera"
-                    class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                  </button>
+                  @if($puedeEditar)
+                    <button type="button" wire:click="abrirModalEditar({{ $jefe['id_jefe_carrera'] }})" title="Editar Jefe de Carrera" aria-label="Editar Jefe de Carrera"
+                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
+                      <i data-lucide="pencil" class="w-4 h-4"></i>
+                    </button>
+                  @endif
+                  @if($jefe['activo'] && $puedeEliminar)
+                    <button type="button" wire:click="desactivar({{ $jefe['id_jefe_carrera'] }})"
+                      wire:confirm="¿Desactivar este perfil de Jefe de Carrera? La cuenta vinculada seguirá activa y podrá iniciar sesión. No se eliminarán el perfil ni la carrera asignada."
+                      title="Desactivar Jefe de Carrera" aria-label="Desactivar Jefe de Carrera"
+                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
+                      <i data-lucide="circle-pause" class="w-4 h-4"></i>
+                    </button>
+                  @elseif(! $jefe['activo'] && $puedeEditar)
+                    <button type="button" wire:click="reactivar({{ $jefe['id_jefe_carrera'] }})"
+                      wire:confirm="¿Reactivar este perfil de Jefe de Carrera? La cuenta vinculada conservará su estado actual."
+                      title="Reactivar Jefe de Carrera" aria-label="Reactivar Jefe de Carrera"
+                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50 hover:scale-110">
+                      <i data-lucide="circle-play" class="w-4 h-4"></i>
+                    </button>
+                  @endif
                 </div>
               </td>
             </tr>
@@ -229,8 +248,8 @@
               class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10 bg-white">
               <option value="">— Selecciona una carrera —</option>
               @foreach($carreras as $carr)
-                <option value="{{ $carr['id_carrera'] }}">
-                  {{ $carr['clave'] }} — {{ $carr['nombre'] }}
+                <option value="{{ $carr['id_carrera'] }}" @selected($id_carrera == $carr['id_carrera'])>
+                  {{ $carr['clave'] }} — {{ $carr['nombre'] }}{{ ! $carr['activo'] ? ' (Inactiva · actualmente asignada)' : '' }}
                 </option>
               @endforeach
             </select>
@@ -243,17 +262,42 @@
               class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
             @error('fecha_inicio') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
           </div>
+
+          @if($carreraNuevaConfirmacionId !== null)
+            <div class="mt-4 p-4 rounded-[11px] border border-amber-300 bg-amber-50 text-[#79520e]">
+              <div class="flex items-start gap-2 text-[12px] font-extrabold">
+                <i data-lucide="triangle-alert" class="w-4 h-4 mt-0.5 shrink-0 text-amber-600"></i>
+                <span>Confirma el cambio de carrera</span>
+              </div>
+              <p class="mt-2 mb-0 text-[11px] leading-5">
+                La asignación cambiará de <b>{{ $nombreCarreraAnteriorConfirmacion }}</b> a <b>{{ $nombreCarreraNuevaConfirmacion }}</b>.
+                El Panel Jefe de Carrera consultará la información correspondiente a la nueva carrera. Los registros académicos permanecerán en sus carreras actuales; no se moverán ni eliminarán.
+              </p>
+            </div>
+          @endif
         </div>
         <div class="flex justify-end gap-2 px-6 pb-6 pt-2 border-t border-[#eeeae8] mt-2">
           <button type="button" wire:click="$set('showModal', false)"
             class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
             Cancelar
           </button>
-          <button type="button" wire:click="guardar"
-            class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
-            <i data-lucide="check" class="w-4 h-4"></i>
-            {{ $editingJefeId ? 'Guardar cambios' : 'Registrar Jefe de Carrera' }}
-          </button>
+          @if($carreraNuevaConfirmacionId !== null)
+            <button type="button" wire:click="cancelarCambioCarrera"
+              class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
+              Cancelar cambio
+            </button>
+            <button type="button" wire:click="confirmarCambioCarrera"
+              class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-amber-500 to-amber-700 shadow-[0_7px_16px_rgba(125,80,8,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(125,80,8,.23)]">
+              <i data-lucide="triangle-alert" class="w-4 h-4"></i>
+              Confirmar cambio y guardar
+            </button>
+          @else
+            <button type="button" wire:click="guardar"
+              class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              {{ $editingJefeId ? 'Guardar cambios' : 'Registrar Jefe de Carrera' }}
+            </button>
+          @endif
         </div>
       </div>
     </div>

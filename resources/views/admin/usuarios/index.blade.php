@@ -186,46 +186,22 @@
 
   <!-- Modal Crear / Editar Usuario -->
   @if($showModal)
-    <div class="fixed inset-0 z-[1000] grid place-items-center p-5 bg-black/55 backdrop-blur-sm" wire:click.self="$set('showModal', false)">
-      <div class="w-full max-w-[560px] max-h-[calc(100vh-40px)] overflow-auto rounded-[20px] bg-white shadow-2xl">
-        <div class="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-[#eeeae8]">
+    <div class="fixed inset-0 z-[1000] grid place-items-center p-5 bg-black/55 backdrop-blur-sm" wire:click.self="cerrarModal">
+      <div class="w-full max-w-[560px] max-h-[calc(100vh-40px)] flex flex-col overflow-hidden rounded-[20px] bg-white shadow-2xl">
+        <div class="shrink-0 flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-[#eeeae8]">
           <div>
             <h2 class="m-0 text-[#283348] text-lg">{{ $editingUserId ? 'Editar usuario' : 'Nuevo usuario' }}</h2>
             <p class="mt-1 mb-0 text-[#919aaa] text-[11px]">{{ $editingUserId ? 'Actualiza la información de la cuenta seleccionada.' : 'Registra una nueva cuenta de acceso en el sistema TESCHA.' }}</p>
           </div>
-          <button type="button" wire:click="$set('showModal', false)"
+          <button type="button" wire:click="cerrarModal"
             class="grid place-items-center w-[34px] h-[34px] rounded-[9px] text-[#788395] bg-[#f7f5f3] transition-colors hover:text-brand-700 hover:bg-brand-100">
             <i data-lucide="x" class="w-4 h-4"></i>
           </button>
         </div>
-        <div class="p-6">
+        <div class="min-h-0 flex-1 overflow-y-auto p-6">
           @if($editingUserId)
-            {{-- ===================================================================
-                 EDICIÓN — sin cambios en esta etapa.
-                 Solo se modifican nombre, correo, rol y estado de la cuenta;
-                 los vínculos de persona existentes se conservan intactos.
-                 =================================================================== --}}
+            {{-- Edición: los campos personales dependen del rol seleccionado. --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="mb-2">
-                <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Nombre completo <span class="text-red-500">*</span></label>
-                <input type="text" wire:model="nombre" placeholder="Ej. María Fernanda Amaro"
-                  class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
-                @error('nombre') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-              </div>
-              <div class="mb-2">
-                <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Correo electrónico <span class="text-red-500">*</span></label>
-                <input type="email" wire:model="email" placeholder="Ej. usuario@tescha.edu.mx"
-                  class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
-                @error('email') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-              </div>
-            </div>
-
-            <p class="mt-2 mb-0 text-[#99a2b0] text-[11px] flex items-center gap-1.5">
-              <i data-lucide="info" class="w-3.5 h-3.5"></i>
-              La contraseña no se muestra aquí. Para cambiarla usa la acción "Restablecer contraseña" del listado.
-            </p>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <div class="mb-2">
                 <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Rol <span class="text-red-500">*</span></label>
                 @if($esCuentaAdministrador)
@@ -241,7 +217,7 @@
                   <select wire:model.live="rolId"
                     class="w-full bg-white py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
                     <option value="">— Selecciona un rol —</option>
-                    @foreach($roles as $rol)
+                    @foreach($rolesEdicion as $rol)
                       <option value="{{ $rol['id_rol'] }}" @selected($rolId == $rol['id_rol'])>{{ $rol['nombre'] }}</option>
                     @endforeach
                   </select>
@@ -257,10 +233,152 @@
             </div>
             @error('activo') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
 
-            <div class="mt-3 flex items-start gap-2 p-3 rounded-[10px] bg-[#f6f4f2] border border-[#ece9e6] text-[#748095] text-[11px]">
-              <i data-lucide="info" class="w-4 h-4 shrink-0 text-brand-500"></i>
-              <span>Este módulo solo gestiona cuentas de acceso: no crea ni vincula personas. Los vínculos existentes con docentes, jefes o alumnos (si los hay) se conservan sin cambios.</span>
-            </div>
+            @if($rolConPersona)
+              @if($rolOriginalNombre === 'Control Escolar')
+                <div class="mt-3 flex items-start gap-2 p-3 rounded-[10px] bg-[#f6f4f2] border border-[#ece9e6] text-[#748095] text-[11px]">
+                  <i data-lucide="info" class="w-4 h-4 shrink-0 text-brand-500"></i>
+                  <span>Esta cuenta solo tiene un nombre completo. Se conserva como nombre de la cuenta; los nombres y apellidos del nuevo perfil deben capturarse por separado.</span>
+                </div>
+              @endif
+              <div class="mt-4 mb-2 flex items-center gap-2 text-[#4b5769] text-[11px] font-extrabold uppercase tracking-[.06em]">
+                <i data-lucide="user" class="w-3.5 h-3.5 text-brand-500"></i>
+                Datos de la persona · {{ $rolElegido }}
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="mb-2">
+                  <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Nombre(s) <span class="text-red-500">*</span></label>
+                  <input type="text" wire:model="p_nombre" placeholder="Ej. María Fernanda"
+                    class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                  @error('p_nombre') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                </div>
+                <div class="mb-2">
+                  <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Apellido paterno <span class="text-red-500">*</span></label>
+                  <input type="text" wire:model="p_apellido_paterno" placeholder="Ej. Amaro"
+                    class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                  @error('p_apellido_paterno') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                <div class="mb-2">
+                  <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Apellido materno</label>
+                  <input type="text" wire:model="p_apellido_materno" placeholder="Ej. Colin"
+                    class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                  @error('p_apellido_materno') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                </div>
+                <div class="mb-2">
+                  <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Correo electrónico <span class="text-red-500">*</span></label>
+                  <input type="email" wire:model="email" placeholder="Ej. usuario@tescha.edu.mx"
+                    class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                  @error('email') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                <div class="mb-2">
+                  @if($rolElegido === 'Alumno')
+                    <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Número de control <span class="text-red-500">*</span></label>
+                    <input type="text" wire:model="no_control" placeholder="Ej. 202224001"
+                      class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                    @error('no_control') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                  @else
+                    <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Número de empleado <span class="text-red-500">*</span></label>
+                    <input type="text" wire:model.blur="no_empleado" placeholder="Ej. 202224001"
+                      class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                    @error('no_empleado') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                  @endif
+                </div>
+
+                @if($rolConCarrera)
+                  <div class="mb-2">
+                    <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Carrera <span class="text-red-500">*</span></label>
+                    <select wire:model="id_carrera"
+                      class="w-full bg-white py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                      <option value="">— Selecciona una carrera —</option>
+                      @foreach($carrerasEdicion as $carrera)
+                        <option value="{{ $carrera['id_carrera'] }}" @selected($id_carrera == $carrera['id_carrera'])>
+                          {{ $carrera['clave'] }} · {{ $carrera['nombre'] }}{{ ! $carrera['activo'] ? ' (Inactiva)' : '' }}
+                        </option>
+                      @endforeach
+                    </select>
+                    @error('id_carrera') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                  </div>
+                @endif
+              </div>
+
+              @if($rolConMultiCarrera)
+                <div class="mb-2 mt-2">
+                  <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">
+                    Carreras <span class="text-red-500">*</span>
+                  </label>
+                  <div class="max-h-[180px] overflow-auto p-3 rounded-[10px] border border-[#e3dfdc] bg-[#faf9f8] grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    @forelse($carrerasEdicion as $carrera)
+                      <label wire:key="editar-carrera-{{ $carrera['id_carrera'] }}" class="inline-flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" wire:model="carreras_ids" value="{{ $carrera['id_carrera'] }}"
+                          class="w-4 h-4 mt-[1px] text-brand-500 rounded border-[#cfc9c5] focus:ring-brand-500/25 shrink-0">
+                        <span class="text-[#293448] text-[12px] font-medium leading-[1.35]">
+                          <b class="text-brand-700">{{ $carrera['clave'] }}</b> · {{ $carrera['nombre'] }}{{ ! $carrera['activo'] ? ' (Inactiva)' : '' }}
+                        </span>
+                      </label>
+                    @empty
+                      <span class="text-[#99a2b0] text-[12px]">No hay carreras disponibles.</span>
+                    @endforelse
+                  </div>
+                  @php
+                    $errCarrerasEdicion = $errors->first('carreras_ids');
+                    if (! $errCarrerasEdicion) {
+                        foreach ($errors->toArray() as $claveErrorEdicion => $mensajesEdicion) {
+                            if (str_starts_with($claveErrorEdicion, 'carreras_ids.')) {
+                                $errCarrerasEdicion = $mensajesEdicion[0] ?? null;
+                                break;
+                            }
+                        }
+                    }
+                  @endphp
+                  @if($errCarrerasEdicion)
+                    <span class="text-red-500 text-xs mt-1 block">{{ $errCarrerasEdicion }}</span>
+                  @endif
+                </div>
+              @endif
+
+              @if($rolConFechaInicio)
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                  <div class="mb-2">
+                    <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Fecha de inicio <span class="text-red-500">*</span></label>
+                    <input type="date" wire:model="fecha_inicio"
+                      class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                    @error('fecha_inicio') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                  </div>
+                </div>
+              @endif
+            @else
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div class="mb-2">
+                  <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Nombre completo <span class="text-red-500">*</span></label>
+                  @if($esCuentaAdministrador)
+                    <div class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] bg-[#faf9f8] text-[#293448] font-medium text-[13px]">
+                      {{ $nombre }}
+                    </div>
+                  @else
+                    <input type="text" wire:model="nombre" placeholder="Ej. María Fernanda Amaro"
+                      class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                    @error('nombre') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                  @endif
+                </div>
+                <div class="mb-2">
+                  <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Correo electrónico <span class="text-red-500">*</span></label>
+                  <input type="email" wire:model="email" placeholder="Ej. usuario@tescha.edu.mx"
+                    class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+                  @error('email') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                </div>
+              </div>
+            @endif
+
+            <p class="mt-3 mb-0 text-[#99a2b0] text-[11px] flex items-center gap-1.5">
+              <i data-lucide="info" class="w-3.5 h-3.5"></i>
+              La contraseña no se modifica aquí. Para cambiarla usa la acción "Restablecer contraseña" del listado.
+            </p>
 
           @else
             {{-- ===================================================================
@@ -335,7 +453,10 @@
                     @error('no_control') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                   @else
                     <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Número de empleado <span class="text-red-500">*</span></label>
-                    <input type="text" wire:model="no_empleado" placeholder="Ej. 202224001"
+                    {{-- .blur: al salir del campo se evalúa si ese docente ya
+                         existe y qué carreras tiene, para mostrarlas antes
+                         de guardar. --}}
+                    <input type="text" wire:model.blur="no_empleado" placeholder="Ej. 202224001"
                       class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
                     @error('no_empleado') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                   @endif
@@ -357,6 +478,70 @@
                   </div>
                 @endif
               </div>
+
+              @if($esCreacion && $rolConMultiCarrera)
+                {{-- ---------- Docente: una o varias carreras (N:N) ---------- --}}
+                <div class="mb-2 mt-2">
+                  <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">
+                    Carreras <span class="text-red-500">*</span>
+                    <span class="text-[#99a2b0] font-medium normal-case">(mínimo una)</span>
+                  </label>
+                  <div class="max-h-[180px] overflow-auto p-3 rounded-[10px] border border-[#e3dfdc] bg-[#faf9f8] grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    @forelse($carreras as $carrera)
+                      <label class="inline-flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" wire:model="carreras_ids" value="{{ $carrera['id_carrera'] }}"
+                          class="w-4 h-4 mt-[1px] text-brand-500 rounded border-[#cfc9c5] focus:ring-brand-500/25 shrink-0">
+                        <span class="text-[#293448] text-[12px] font-medium leading-[1.35]">
+                          <b class="text-brand-700">{{ $carrera['clave'] }}</b> · {{ $carrera['nombre'] }}
+                        </span>
+                      </label>
+                    @empty
+                      <span class="text-[#99a2b0] text-[12px]">No hay carreras activas disponibles.</span>
+                    @endforelse
+                  </div>
+
+                  {{-- Errores de carreras_ids (incluidos los de cada elemento) --}}
+                  @php
+                    $errCarreras = $errors->first('carreras_ids');
+                    if (! $errCarreras) {
+                        foreach ($errors->toArray() as $claveError => $mensajes) {
+                            if (str_starts_with($claveError, 'carreras_ids.')) {
+                                $errCarreras = $mensajes[0] ?? null;
+                                break;
+                            }
+                        }
+                    }
+                  @endphp
+                  @if($errCarreras)
+                    <span class="text-red-500 text-xs mt-1 block">{{ $errCarreras }}</span>
+                  @endif
+
+                  {{-- Asignaciones actuales de un docente que ya existe --}}
+                  @if($docentePreexistente)
+                    <div class="mt-2 p-3 rounded-[10px] border border-amber-300 bg-amber-50">
+                      <div class="flex items-start gap-2 text-[#8a5a12] text-[11px] font-bold">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-gold-500"></i>
+                        <span><b>{{ $docentePreexistente['nombre'] }}</b> ya pertenece a:</span>
+                      </div>
+                      <div class="flex flex-wrap gap-x-4 gap-y-1.5 mt-2">
+                        @foreach($docentePreexistente['carreras'] as $carr)
+                          <span class="inline-flex items-center gap-1.5">
+                            <span class="px-1.5 py-0.5 rounded text-white bg-brand-500 text-[10px] font-extrabold">{{ $carr['clave'] }}</span>
+                            <span class="text-[#748095] text-[11px]">{{ $carr['nombre'] }}</span>
+                          </span>
+                        @endforeach
+                      </div>
+                      <label class="mt-2.5 flex items-start gap-2 cursor-pointer">
+                        <input type="checkbox" wire:model="confirmarCarreras"
+                          class="w-4 h-4 mt-[1px] rounded border-[#cfc9c5] focus:ring-gold-500/25 shrink-0">
+                        <span class="text-[#8a5a12] text-[11px] font-semibold leading-[1.4]">
+                          Confirmo reemplazar las asignaciones anteriores por las carreras marcadas arriba.
+                        </span>
+                      </label>
+                    </div>
+                  @endif
+                </div>
+              @endif
 
               @if($rolConFechaInicio)
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
@@ -418,8 +603,8 @@
             </div>
           @endif
         </div>
-        <div class="flex justify-end gap-2 px-6 pb-6 pt-2 border-t border-[#eeeae8] mt-2">
-          <button type="button" wire:click="$set('showModal', false)"
+        <div class="shrink-0 flex justify-end gap-2 px-6 pb-6 pt-2 border-t border-[#eeeae8] mt-2">
+          <button type="button" wire:click="cerrarModal"
             class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
             Cancelar
           </button>
@@ -429,6 +614,79 @@
             {{ $editingUserId ? 'Guardar cambios' : 'Crear usuario' }}
           </button>
         </div>
+
+        @if($mostrarConfirmacionGuardado)
+          <div class="fixed inset-0 z-[1200] grid place-items-center p-5 bg-black/55 backdrop-blur-sm">
+            <div class="w-full max-w-[460px] rounded-[16px] bg-white shadow-2xl p-5">
+              <div class="flex items-start gap-3">
+                <i data-lucide="triangle-alert" class="w-5 h-5 shrink-0 text-amber-600 mt-0.5"></i>
+                <div>
+                  <h3 class="m-0 text-[#283348] text-[15px] font-extrabold">Confirma los cambios</h3>
+                  @if($rolOriginalNombre !== $rolElegido)
+                    <p class="mt-1.5 mb-0 text-[#748095] text-[12px]">
+                      Estás cambiando el rol de <b>{{ $rolOriginalNombre }}</b> a <b>{{ $rolElegido }}</b>. Esto actualizará los permisos de acceso de la cuenta.
+                    </p>
+                    <p class="mt-2 mb-0 text-[#748095] text-[12px]">
+                      Los registros y relaciones de la persona anterior se conservarán.
+                      @if($rolConPersona)
+                        El perfil del nuevo rol se vinculará si existe una coincidencia válida o se creará con los datos capturados.
+                      @else
+                        Este rol no tiene un registro de persona asociado; los vínculos anteriores se conservarán sin cambios.
+                      @endif
+                      La contraseña no cambiará.
+                    </p>
+                  @else
+                    <p class="mt-1.5 mb-0 text-[#748095] text-[12px]">Se actualizarán las carreras vinculadas al perfil Docente seleccionado.</p>
+                  @endif
+
+                  @if($carrerasAgregadasConfirmacion !== [])
+                    <p class="mt-2 mb-0 text-[#748095] text-[12px]">Se agregarán: <b>{{ implode(', ', $carrerasAgregadasConfirmacion) }}</b>.</p>
+                  @endif
+                  @if($carrerasRetiradasConfirmacion !== [])
+                    <p class="mt-1 mb-0 text-[#748095] text-[12px]">Se retirarán de ese perfil: <b>{{ implode(', ', $carrerasRetiradasConfirmacion) }}</b>. Las demás relaciones académicas permanecerán intactas.</p>
+                  @endif
+                </div>
+              </div>
+              <div class="flex justify-end gap-2 mt-4">
+                <button type="button" wire:click="cancelarGuardadoPendiente"
+                  class="py-2 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
+                  Volver al formulario
+                </button>
+                <button type="button" wire:click="confirmarGuardadoPendiente"
+                  class="py-2 px-4 rounded-[10px] text-white bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-xs transition-colors hover:opacity-90">
+                  Confirmar y guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        @endif
+
+        {{-- Aviso de cierre sin guardar (solo EDICION con cambios):
+             aparece sobre el modal cuando se intenta cerrar la X,
+             "Cancelar" o el fondo, y aun no se ha guardado. --}}
+        @if($confirmarCierrePendiente)
+          <div class="fixed inset-0 z-[1200] grid place-items-center p-5 bg-black/55 backdrop-blur-sm">
+            <div class="w-full max-w-[420px] rounded-[16px] bg-white shadow-2xl p-5">
+              <div class="flex items-start gap-3">
+                <i data-lucide="triangle-alert" class="w-5 h-5 shrink-0 text-amber-600 mt-0.5"></i>
+                <div>
+                  <h3 class="m-0 text-[#283348] text-[15px] font-extrabold">Hay cambios sin guardar</h3>
+                  <p class="mt-1.5 mb-0 text-[#748095] text-[12px]">Si cierras ahora, los cambios realizados en este usuario se perderán.</p>
+                </div>
+              </div>
+              <div class="flex justify-end gap-2 mt-4">
+                <button type="button" wire:click="cancelarCierreConfirmado"
+                  class="py-2 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
+                  Seguir editando
+                </button>
+                <button type="button" wire:click="cerrarModalSinGuardar"
+                  class="py-2 px-4 rounded-[10px] border border-red-200 text-red-600 bg-red-50 font-bold text-xs transition-colors hover:bg-red-100">
+                  Cerrar sin guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        @endif
       </div>
     </div>
   @endif

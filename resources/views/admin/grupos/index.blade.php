@@ -3,17 +3,45 @@
   <h1 class="m-0 text-[#202b3d] text-[26px] md:text-[29px] tracking-tight">Gestión de Grupos</h1>
   <p class="mt-1.5 mb-6 text-[#748095] text-sm">Administra los grupos académicos del sistema y consulta su información.</p>
 
-  <!-- Barra de búsqueda y botón -->
-  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_8px_22px_rgba(31,38,50,.045)]">
-    <div class="flex items-center gap-2.5 flex-1 sm:max-w-[430px] px-3.5 py-2.5 rounded-[11px] border border-[#e8e4e1] bg-[#faf9f8] text-[#8b95a5]">
-      <i data-lucide="search" class="w-[17px]"></i>
-      <input type="search" wire:model.live="search" placeholder="Buscar por nombre, materia, docente o periodo..." class="w-full border-0 outline-none bg-transparent text-[#253146] text-[13px] font-medium">
+  <div class="flex flex-col gap-3 p-4 rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_8px_22px_rgba(31,38,50,.045)]">
+    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 flex-1 lg:max-w-[470px] px-3.5 py-2.5 rounded-[11px] border border-[#e8e4e1] bg-[#faf9f8] text-[#8b95a5]">
+        <i data-lucide="search" class="w-[17px]"></i>
+        <input type="search" wire:model.live.debounce.300ms="search" placeholder="Buscar grupo, materia, carrera, docente o periodo..." class="w-full border-0 outline-none bg-transparent text-[#253146] text-[13px] font-medium">
+      </div>
+      @if($puedeCrear)
+        <button type="button" wire:click="abrirModalCrear"
+          class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          Nuevo Grupo
+        </button>
+      @endif
     </div>
-    <button type="button" wire:click="abrirModalCrear"
-      class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
-      <i data-lucide="plus" class="w-4 h-4"></i>
-      Nuevo Grupo
-    </button>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+      <select wire:model.live="filtroCarrera" class="w-full py-2.5 px-3 rounded-[11px] border border-[#e8e4e1] outline-none bg-white text-[#39465a] text-[12px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+        <option value="">Todas las carreras</option>
+        @foreach($carrerasFiltro as $carrera)
+          <option value="{{ $carrera['id_carrera'] }}">{{ $carrera['clave'] }} · {{ $carrera['nombre'] }}{{ ! $carrera['activo'] ? ' (Inactiva)' : '' }}</option>
+        @endforeach
+      </select>
+      <select wire:model.live="filtroMateria" class="w-full py-2.5 px-3 rounded-[11px] border border-[#e8e4e1] outline-none bg-white text-[#39465a] text-[12px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+        <option value="">Todas las materias</option>
+        @foreach($materiasFiltro as $materia)
+          <option value="{{ $materia['id_materia'] }}">{{ $materia['clave'] }} · {{ $materia['nombre'] }}{{ ! $materia['activo'] ? ' (Inactiva)' : '' }}</option>
+        @endforeach
+      </select>
+      <select wire:model.live="filtroPeriodo" class="w-full py-2.5 px-3 rounded-[11px] border border-[#e8e4e1] outline-none bg-white text-[#39465a] text-[12px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+        <option value="">Todos los periodos</option>
+        @foreach($periodosFiltro as $periodo)
+          <option value="{{ $periodo['id_periodo'] }}">{{ $periodo['clave'] }} · {{ $periodo['estado'] }}</option>
+        @endforeach
+      </select>
+      <select wire:model.live="filtroEstado" class="w-full py-2.5 px-3 rounded-[11px] border border-[#e8e4e1] outline-none bg-white text-[#39465a] text-[12px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+        <option value="">Todos los estados</option>
+        <option value="1">Activo</option>
+        <option value="0">Inactivo</option>
+      </select>
+    </div>
   </div>
 
   <!-- Mensajes flash (se ocultan automáticamente en 3s) -->
@@ -28,6 +56,13 @@
     <div class="flash-msg mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-[11px] text-sm font-semibold shadow-sm flex items-center gap-2">
       <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
       {{ session('error') }}
+    </div>
+  @endif
+
+  @if(session('warning'))
+    <div class="flash-msg mt-4 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-[11px] text-sm font-semibold shadow-sm flex items-center gap-2">
+      <i data-lucide="triangle-alert" class="w-4 h-4 text-amber-600"></i>
+      {{ session('warning') }}
     </div>
   @endif
 
@@ -50,8 +85,8 @@
           <i data-lucide="check-circle" class="w-5 h-5"></i>
         </div>
         <div>
-          <b class="block text-[#293448] text-lg">{{ collect($grupos)->where('activo', 1)->count() }}</b>
-          <span class="text-[#919aaa] text-[11px]">Activos</span>
+          <b class="block text-[#293448] text-lg">{{ $gruposActivosCount }}</b>
+          <span class="text-[#919aaa] text-[11px]">Activos en total</span>
         </div>
       </div>
     </div>
@@ -61,8 +96,8 @@
           <i data-lucide="x-circle" class="w-5 h-5"></i>
         </div>
         <div>
-          <b class="block text-[#293448] text-lg">{{ collect($grupos)->where('activo', 0)->count() }}</b>
-          <span class="text-[#919aaa] text-[11px]">Inactivos</span>
+          <b class="block text-[#293448] text-lg">{{ $gruposInactivosCount }}</b>
+          <span class="text-[#919aaa] text-[11px]">Inactivos en total</span>
         </div>
       </div>
     </div>
@@ -72,8 +107,8 @@
           <i data-lucide="users" class="w-5 h-5"></i>
         </div>
         <div>
-          <b class="block text-[#293448] text-lg">{{ collect($grupos)->sum('cupo_maximo') }}</b>
-          <span class="text-[#919aaa] text-[11px]">Cupo total</span>
+          <b class="block text-[#293448] text-lg">{{ $cupoTotal }}</b>
+          <span class="text-[#919aaa] text-[11px]">Cupo general</span>
         </div>
       </div>
     </div>
@@ -86,7 +121,7 @@
         <h2 class="m-0 text-[#293448] text-base">Catálogo de Grupos</h2>
         <span class="text-[#919aaa] text-[11px]">Grupos registrados en el sistema TESCHA</span>
       </div>
-      <span class="text-[#919aaa] text-[11px]">{{ $grupoCount }} registros</span>
+       <span class="text-[#919aaa] text-[11px]">{{ $gruposFiltradosCount }} resultados · {{ $grupoCount }} grupos en total</span>
     </div>
 
     <div class="overflow-x-auto">
@@ -104,25 +139,26 @@
         </thead>
         <tbody>
           @forelse($grupos as $gru)
-            <tr class="transition-colors duration-150 hover:bg-[#fcfafb]">
+            <tr wire:key="grupo-{{ $gru->id_grupo }}" class="transition-colors duration-150 hover:bg-[#fcfafb]">
               <td class="px-5 py-4 border-b border-[#f2efed]">
                 <div class="flex items-center gap-3 min-w-[160px]">
                   <div class="grid place-items-center w-10 h-10 shrink-0 rounded-xl text-brand-500 bg-brand-100">
                     <i data-lucide="grid-2x2" class="w-[19px] h-[19px]"></i>
                   </div>
                   <div>
-                    <span class="block text-[#263247] font-extrabold text-[13px]">{{ $gru['nombre'] }}</span>
+                    <span class="block text-[#263247] font-extrabold text-[13px]">{{ $gru->nombre }}</span>
                     <span class="block mt-0.5 text-[#99a2b0] text-[11px]">Grupo</span>
                   </div>
                 </div>
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed] text-[#39465a] text-[13px]">
-                <span class="block text-[#263247] font-semibold text-[13px]">{{ $gru['materia']['nombre'] ?? '—' }}</span>
-                <span class="block mt-0.5 text-[#99a2b0] text-[11px]">{{ $gru['materia']['clave'] ?? '' }}</span>
+                <span class="block text-[#263247] font-semibold text-[13px]">{{ $gru->materia?->nombre ?? '—' }}</span>
+                <span class="block mt-0.5 text-[#99a2b0] text-[11px]">{{ $gru->materia?->clave ?? '' }}</span>
+                <span class="block mt-0.5 text-[#99a2b0] text-[10px]">{{ $gru->materia?->carrera?->clave ?? 'Carrera no disponible' }}</span>
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed] text-[#39465a] text-[13px]">
-                @if($gru['docente'])
-                  {{ $gru['docente']['nombre'] }} {{ $gru['docente']['apellido_paterno'] }}
+                @if($gru->docente)
+                  {{ $gru->docente->nombre }} {{ $gru->docente->apellido_paterno }}
                 @else
                   <span class="inline-flex items-center gap-1.5 text-[#99a2b0] text-[12px] font-semibold">
                     <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
@@ -131,18 +167,18 @@
                 @endif
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed] text-[#39465a] text-[13px]">
-                @if($gru['periodo'])
-                  <span class="px-1.5 py-0.5 rounded text-white bg-brand-500 text-[10px] font-extrabold">{{ $gru['periodo']['clave'] }}</span>
-                  <span class="block mt-0.5 text-[#99a2b0] text-[11px]">{{ $gru['periodo']['nombre'] }}</span>
+                @if($gru->periodo)
+                  <span class="px-1.5 py-0.5 rounded text-white bg-brand-500 text-[10px] font-extrabold">{{ $gru->periodo->clave }}</span>
+                  <span class="block mt-0.5 text-[#99a2b0] text-[11px]">{{ $gru->periodo->nombre }}</span>
                 @else
                   <span class="text-[#99a2b0] text-[12px]">—</span>
                 @endif
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed] text-[#39465a] text-[13px]">
-                <span class="px-2 py-1 rounded-lg text-white bg-gold-500 text-[12px] font-extrabold">{{ $gru['cupo_maximo'] }}</span>
+                <span class="px-2 py-1 rounded-lg text-white bg-gold-500 text-[12px] font-extrabold">{{ $gru->cupo_maximo }}</span>
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed]">
-                @if($gru['activo'])
+                @if($gru->activo)
                   <span class="inline-flex items-center gap-1.5 text-emerald-700 text-[11px] font-bold">
                     <span class="w-[7px] h-[7px] rounded-full bg-emerald-500 inline-block"></span>
                     Activo
@@ -156,15 +192,28 @@
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed]">
                 <div class="flex gap-1.5">
-                  <button wire:click="abrirModalEditar({{ $gru['id_grupo'] }})" title="Editar grupo"
-                    class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
-                    <i data-lucide="pencil" class="w-4 h-4"></i>
-                  </button>
-                  <button wire:click="eliminar({{ $gru['id_grupo'] }})" wire:confirm="¿Eliminar este grupo?"
-                    title="Eliminar grupo"
-                    class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                  </button>
+                  @if($puedeEditar)
+                    <button type="button" wire:click="abrirModalEditar({{ $gru->id_grupo }})" title="Editar grupo"
+                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
+                      <i data-lucide="pencil" class="w-4 h-4"></i>
+                    </button>
+                  @endif
+                  @if(($gru->activo && $puedeEliminar) || (! $gru->activo && $puedeEditar))
+                    <button type="button" wire:click="toggleActivo({{ $gru->id_grupo }})"
+                      wire:confirm="{{ $gru->activo ? '¿Desactivar este grupo?' : '¿Reactivar este grupo?' }}"
+                      title="{{ $gru->activo ? 'Desactivar grupo' : 'Reactivar grupo' }}"
+                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50 hover:scale-110">
+                      <i data-lucide="{{ $gru->activo ? 'circle-pause' : 'circle-play' }}" class="w-4 h-4"></i>
+                    </button>
+                  @endif
+                  @if($puedeEliminar)
+                    <button type="button" wire:click="eliminar({{ $gru->id_grupo }})"
+                      wire:confirm="¿Eliminar este grupo? Si tiene inscripciones, calificaciones, actas o asignaciones se conservará y desactivará."
+                      title="Eliminar o conservar grupo"
+                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
+                      <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                  @endif
                 </div>
               </td>
             </tr>
@@ -181,6 +230,9 @@
         </tbody>
       </table>
     </div>
+    @if($grupos->hasPages())
+      <div class="px-5 py-4 border-t border-[#f1efed]">{{ $grupos->links() }}</div>
+    @endif
   </section>
 
   <!-- Modal Crear / Editar Grupo -->
@@ -200,23 +252,31 @@
         <div class="p-6">
           <div class="mb-4">
             <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Materia</label>
-            <select wire:model="id_materia"
+            <select wire:model.live="id_materia"
               class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10 bg-white">
               <option value="">— Selecciona una materia —</option>
               @foreach($materias as $mat)
-                <option value="{{ $mat['id_materia'] }}">{{ $mat['clave'] }} — {{ $mat['nombre'] }}</option>
+                <option value="{{ $mat['id_materia'] }}" @selected($id_materia == $mat['id_materia'])>
+                  {{ $mat['clave'] }} — {{ $mat['nombre'] }}{{ ! $mat['activo'] ? ' (Inactiva, asignación actual)' : '' }}
+                  · {{ $mat['carrera']['clave'] ?? 'Carrera no disponible' }}
+                </option>
               @endforeach
             </select>
+            @if($materias === [])
+              <span class="text-red-500 text-xs mt-1 block">No hay materias activas disponibles.</span>
+            @endif
             @error('id_materia') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
           </div>
 
           <div class="mb-4">
             <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Periodo Escolar</label>
-            <select wire:model="id_periodo"
+            <select wire:model.live="id_periodo"
               class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10 bg-white">
               <option value="">— Selecciona un periodo —</option>
               @foreach($periodos as $per)
-                <option value="{{ $per['id_periodo'] }}">{{ $per['clave'] }} — {{ $per['nombre'] }}</option>
+                <option value="{{ $per['id_periodo'] }}" @selected($id_periodo == $per['id_periodo'])>
+                  {{ $per['clave'] }} — {{ $per['nombre'] }} ({{ $per['estado'] }})
+                </option>
               @endforeach
             </select>
             @error('id_periodo') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
@@ -224,20 +284,49 @@
 
           <div class="mb-4">
             <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Docente <span class="text-[#919aaa] font-normal">(opcional)</span></label>
-            <select wire:model="id_docente"
+            <select wire:model.live="id_docente"
               class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10 bg-white">
               <option value="">— Sin asignar —</option>
               @foreach($docentes as $doc)
-                <option value="{{ $doc['id_docente'] }}">{{ $doc['nombre'] }} {{ $doc['apellido_paterno'] }} {{ $doc['apellido_materno'] ?? '' }}</option>
+                <option value="{{ $doc['id_docente'] }}" @selected($id_docente == $doc['id_docente'])>
+                  {{ $doc['nombre'] }} {{ $doc['apellido_paterno'] }} {{ $doc['apellido_materno'] ?? '' }}{{ ! $doc['activo'] ? ' (Inactivo, asignación actual)' : '' }}
+                </option>
               @endforeach
             </select>
             @error('id_docente') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
           </div>
 
+          @if($avisoDocenteCarrera)
+            <div class="mb-4 flex items-start gap-2 p-3 rounded-[10px] border border-amber-200 bg-amber-50 text-[#8a5a12] text-[11px] leading-5">
+              <i data-lucide="info" class="w-4 h-4 shrink-0"></i>
+              <span>{{ $avisoDocenteCarrera }} No se bloqueará la asignación por este motivo.</span>
+            </div>
+          @endif
+
+          @if($gruposDuplicados !== [])
+            <div class="mb-4 p-3 rounded-[10px] border border-amber-200 bg-amber-50 text-[#8a5a12] text-[11px] leading-5">
+              <b class="block mb-1">Posible grupo duplicado</b>
+              <span>Ya existe un grupo con la misma materia, periodo y nombre. La coincidencia se advierte, pero no se bloquea ni se cambia automáticamente.</span>
+              @foreach($gruposDuplicados as $duplicado)
+                <span class="block mt-1">Grupo {{ $duplicado['nombre'] }} · {{ $duplicado['materia'] }} · {{ $duplicado['periodo'] ?? 'Sin periodo' }}{{ $duplicado['activo'] ? ' · Activo' : ' · Inactivo' }}</span>
+              @endforeach
+            </div>
+          @endif
+
+          @if($editingGrupoId && $relacionesGrupoActuales !== [])
+            <div class="mb-4 p-3 rounded-[10px] border border-blue-200 bg-blue-50 text-blue-900 text-[11px] leading-5">
+              <b class="block mb-1">Grupo con información relacionada</b>
+              <span>Se conservarán las relaciones existentes. No se permitirá cambiar su materia o periodo mientras estén vinculados: {{ implode(', ', $relacionesGrupoActuales) }}.</span>
+              @if($inscripcionesGrupoActual > 0)
+                <span class="block mt-1">Inscripciones registradas: {{ $inscripcionesGrupoActual }}. El cupo no puede reducirse por debajo de esta cantidad.</span>
+              @endif
+            </div>
+          @endif
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="mb-2">
               <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Nombre del Grupo</label>
-              <input type="text" wire:model="nombre" placeholder="Ej. 501"
+              <input type="text" wire:model.live.debounce.300ms="nombre" placeholder="Ej. 501"
                 class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
               @error('nombre') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
             </div>

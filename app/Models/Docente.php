@@ -18,4 +18,22 @@ class Docente extends Model
         'email',
         'activo',
     ];
+
+    /**
+     * Carreras a las que PERTENECE formalmente el docente (N:N).
+     *
+     * Se guardan en la tabla intermedia `carrera_docente` y se asignan de
+     * forma explícita desde los módulos Docentes o Usuarios y Roles.
+     * NO se deducen de las materias ni de los grupos que imparta: esos
+     * son "los grupos que imparte", una relación académica distinta.
+     */
+    public function carreras()
+    {
+        return $this->belongsToMany(
+            Carrera::class,
+            'carrera_docente',
+            'id_docente',
+            'id_carrera'
+        );
+    }
 }

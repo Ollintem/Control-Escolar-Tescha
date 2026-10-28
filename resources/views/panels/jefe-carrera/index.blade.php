@@ -59,7 +59,8 @@
         @php
             $tarjetas = [
                 ['icono' => 'book-open',          'color' => 'text-brand-500 bg-brand-100', 'n' => $totalMaterias,       'label' => 'Materias de la carrera'],
-                ['icono' => 'user-cog',           'color' => 'text-gold-500 bg-amber-50',   'n' => $totalDocentes,       'label' => 'Docentes en la carrera'],
+                ['icono' => 'user-cog',           'color' => 'text-gold-500 bg-amber-50',   'n' => $totalDocentesPertenecen, 'label' => 'Docentes de la carrera'],
+                ['icono' => 'presentation',       'color' => 'text-blue-600 bg-blue-50',    'n' => $totalDocentesImparten,   'label' => 'Docentes que imparten'],
                 ['icono' => 'grid-2x2',           'color' => 'text-blue-600 bg-blue-50',    'n' => $totalGrupos,         'label' => 'Grupos'],
                 ['icono' => 'users-round',        'color' => 'text-emerald-600 bg-emerald-50', 'n' => $totalAlumnos,     'label' => 'Alumnos'],
                 ['icono' => 'clipboard-list',     'color' => 'text-brand-500 bg-brand-100', 'n' => $totalCalificaciones, 'label' => 'Calificaciones'],
@@ -128,7 +129,7 @@
     </section>
 
     {{-- Estado vacío general: solo cuando realmente no hay nada que mostrar --}}
-    @if ($idCarrera !== null && $totalMaterias + $totalDocentes + $totalGrupos + $totalAlumnos + $totalCalificaciones + $totalHistorial === 0)
+    @if ($idCarrera !== null && $totalMaterias + $totalDocentesPertenecen + $totalDocentesImparten + $totalGrupos + $totalAlumnos + $totalCalificaciones + $totalHistorial === 0)
         <section class="mt-5 p-8 rounded-[17px] border border-[#ece9e6] bg-white text-center shadow-[0_5px_13px_rgba(31,38,50,.04)]">
             <div class="grid place-items-center w-[52px] h-[52px] mx-auto mb-4 rounded-2xl text-[#98a2b2] bg-cream">
                 <i data-lucide="landmark" class="w-[24px]"></i>

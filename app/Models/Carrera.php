@@ -16,4 +16,21 @@ class Carrera extends Model
         'reticula_oficial',
         'activo',
     ];
+
+    /**
+     * Docentes que PERTENECEN a esta carrera (N:N, relación inversa).
+     *
+     * No confundir con los docentes que imparten grupos de esta carrera
+     * (docentes -> grupos -> materias -> carreras): un docente puede
+     * impartir clases en una carrera sin pertenecer formalmente a ella.
+     */
+    public function docentes()
+    {
+        return $this->belongsToMany(
+            Docente::class,
+            'carrera_docente',
+            'id_carrera',
+            'id_docente'
+        );
+    }
 }

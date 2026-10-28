@@ -31,6 +31,97 @@
     </div>
   @endif
 
+  <!-- ============================================================
+       ADMINISTRACIÓN DE LA CARRERA
+       Acceso rápido desde el Dashboard (clic en nombre o flecha).
+       Información general + conteos de relaciones existentes.
+       ============================================================ -->
+  @if($carreraDetalle)
+    <section class="mt-4 overflow-hidden rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_8px_22px_rgba(31,38,50,.045)]">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-5 border-b border-[#efedeb]">
+        <div class="flex items-center gap-3">
+          <div class="grid place-items-center w-10 h-10 rounded-xl text-brand-500 bg-brand-100">
+            <i data-lucide="landmark" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="m-0 text-[#293448] text-base">Administración de la carrera</h2>
+            <span class="text-[#919aaa] text-[11px]">{{ $carreraDetalle['nombre'] }}</span>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" wire:click="abrirModalEditar({{ $carreraDetalle['id_carrera'] }})"
+            class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+            Editar información
+          </button>
+          <button type="button" wire:click="cerrarDetalleCarrera"
+            class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
+            Cerrar
+          </button>
+        </div>
+      </div>
+
+      <!-- Información general -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 px-5 py-5 border-b border-[#f1efed]">
+        <div>
+          <span class="block mb-1.5 text-[#919aaa] text-[11px] font-extrabold uppercase tracking-[.07em]">Clave oficial</span>
+          <span class="inline-block px-1.5 py-0.5 rounded text-white bg-brand-500 text-[11px] font-extrabold">{{ $carreraDetalle['clave'] }}</span>
+        </div>
+        <div>
+          <span class="block mb-1.5 text-[#919aaa] text-[11px] font-extrabold uppercase tracking-[.07em]">Rétícula oficial</span>
+          @if($carreraDetalle['reticula_oficial'])
+            <span class="inline-flex items-center gap-1.5 text-blue-700 text-[13px] font-semibold">
+              <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
+              {{ $carreraDetalle['reticula_oficial'] }}
+            </span>
+          @else
+            <span class="text-[#99a2b0] text-[12px]">Sin rétícula asignada</span>
+          @endif
+        </div>
+        <div>
+          <span class="block mb-1.5 text-[#919aaa] text-[11px] font-extrabold uppercase tracking-[.07em]">Estado</span>
+          @if($carreraDetalle['activo'])
+            <span class="inline-flex items-center gap-1.5 text-emerald-700 text-[12px] font-bold">
+              <span class="w-[7px] h-[7px] rounded-full bg-emerald-500 inline-block"></span>
+              Carrera activa
+            </span>
+          @else
+            <span class="inline-flex items-center gap-1.5 text-[#99a2b0] text-[12px] font-bold">
+              <span class="w-[7px] h-[7px] rounded-full bg-[#c7cbd2] inline-block"></span>
+              Carrera inactiva
+            </span>
+          @endif
+        </div>
+      </div>
+
+      <!-- Contenido académico relacionado -->
+      <div class="px-5 py-5">
+        <span class="block mb-3 text-[#919aaa] text-[11px] font-extrabold uppercase tracking-[.07em]">Contenido académico</span>
+        <div class="grid grid-cols-2 lg:grid-cols-6 gap-3">
+          @php
+            $resumenCarrera = [
+              ['icono' => 'calendar-days', 'valor' => $carreraDetalle['semestres'], 'texto' => 'Semestres', 'color' => 'text-brand-500 bg-brand-100'],
+              ['icono' => 'book-open',     'valor' => $carreraDetalle['materias'],  'texto' => 'Materias',  'color' => 'text-blue-600 bg-blue-50'],
+              ['icono' => 'award',         'valor' => $carreraDetalle['jefes'],     'texto' => 'Jefes',     'color' => 'text-gold-500 bg-amber-50'],
+              ['icono' => 'grid-2x2',      'valor' => $carreraDetalle['grupos'],    'texto' => 'Grupos',    'color' => 'text-emerald-600 bg-emerald-50'],
+              ['icono' => 'users-round',   'valor' => $carreraDetalle['alumnos'],   'texto' => 'Alumnos',   'color' => 'text-brand-500 bg-brand-100'],
+              ['icono' => 'user-cog',      'valor' => $carreraDetalle['docentes'],  'texto' => 'Docentes',  'color' => 'text-blue-600 bg-blue-50'],
+            ];
+          @endphp
+          @foreach($resumenCarrera as $item)
+            <div class="p-4 rounded-[15px] border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.04)] text-center">
+              <div class="grid place-items-center w-9 h-9 mx-auto mb-2 rounded-xl {{ $item['color'] }}">
+                <i data-lucide="{{ $item['icono'] }}" class="w-[18px]"></i>
+              </div>
+              <b class="block text-[#293448] text-lg">{{ $item['valor'] }}</b>
+              <span class="text-[#919aaa] text-[11px]">{{ $item['texto'] }}</span>
+            </div>
+          @endforeach
+        </div>
+      </div>
+    </section>
+  @endif
+
   <!-- Estadísticas rápidas -->
   <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
     <div class="p-4 rounded-[15px] border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.04)]">
@@ -206,6 +297,15 @@
               class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
             @error('reticula_oficial') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
           </div>
+
+          <div class="mb-2 flex items-center gap-2 p-3 rounded-[10px] border border-[#e3dfdc] bg-[#faf9f8]">
+            <label class="inline-flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" wire:model="activo" class="w-4 h-4 text-brand-500 rounded border-[#cfc9c5] focus:ring-brand-500/25">
+              <span class="text-[#4b5769] text-[12px] font-extrabold">Carrera activa</span>
+            </label>
+            <span class="ml-auto text-[#99a2b0] text-[11px]">Desactiva la carrera sin eliminarla</span>
+          </div>
+          @error('activo') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
         </div>
         <div class="flex justify-end gap-2 px-6 pb-6 pt-2 border-t border-[#eeeae8] mt-2">
           <button type="button" wire:click="$set('showModal', false)"

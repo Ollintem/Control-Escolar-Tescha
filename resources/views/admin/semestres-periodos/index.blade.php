@@ -355,15 +355,21 @@
                   @endif
                 </td>
                 <td class="px-5 py-4 border-b border-[#f2efed]">
-                  @if($per['activo'])
+                  @php $estadoPeriodo = $per['estado'] ?? ($per['activo'] ? 'Activo' : 'Finalizado'); @endphp
+                  @if($estadoPeriodo === 'Activo')
                     <span class="inline-flex items-center gap-1.5 text-emerald-700 text-[11px] font-bold">
                       <span class="w-[7px] h-[7px] rounded-full bg-emerald-500 inline-block"></span>
                       Activo
                     </span>
+                  @elseif($estadoPeriodo === 'Próximo')
+                    <span class="inline-flex items-center gap-1.5 text-blue-700 text-[11px] font-bold">
+                      <span class="w-[7px] h-[7px] rounded-full bg-blue-500 inline-block"></span>
+                      Próximo
+                    </span>
                   @else
                     <span class="inline-flex items-center gap-1.5 text-[#99a2b0] text-[11px] font-bold">
                       <span class="w-[7px] h-[7px] rounded-full bg-[#c7cbd2] inline-block"></span>
-                      Inactivo
+                      Finalizado
                     </span>
                   @endif
                 </td>
@@ -436,7 +442,42 @@
                   class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
                 @error('fecha_fin') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
               </div>
+
+              <div class="mb-2 sm:col-span-2">
+                <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Estado <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-[10px] border border-[#e3dfdc] bg-[#faf9f8]">
+                  @foreach(\App\Models\PeriodoEscolar::ESTADOS as $opcionEstado)
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                      <input type="radio" wire:model.live="estado" value="{{ $opcionEstado }}"
+                        class="w-4 h-4 text-brand-500 border-[#cfc9c5] focus:ring-brand-500/25">
+                      <span class="text-[#293448] text-[12px] font-semibold">{{ $opcionEstado }}</span>
+                    </label>
+                  @endforeach
+                </div>
+                @error('estado') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+              </div>
             </div>
+
+            {{-- Advertencia: solo puede existir UN periodo activo a la vez.
+                 Se muestra ANTES de guardar y debe confirmarse explícitamente. --}}
+            @if($periodoActivoEnConflicto)
+              <div class="mt-4 p-3 rounded-[10px] border border-amber-300 bg-amber-50">
+                <div class="flex items-start gap-2 text-[#8a5a12] text-[11px] font-bold">
+                  <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-gold-500"></i>
+                  <span>
+                    Actualmente el periodo <b>{{ $periodoActivoEnConflicto }}</b> está activo.
+                    ¿Deseas finalizarlo y activar el nuevo periodo?
+                  </span>
+                </div>
+                <label class="mt-2.5 flex items-start gap-2 cursor-pointer">
+                  <input type="checkbox" wire:model="confirmarCambioActivo"
+                    class="w-4 h-4 mt-[1px] rounded border-[#cfc9c5] focus:ring-gold-500/25 shrink-0">
+                  <span class="text-[#8a5a12] text-[11px] font-semibold leading-[1.4]">
+                    Confirmo finalizar el periodo {{ $periodoActivoEnConflicto }} y activar este periodo.
+                  </span>
+                </label>
+              </div>
+            @endif
           </div>
           <div class="flex justify-end gap-2 px-6 pb-6 pt-2 border-t border-[#eeeae8] mt-2">
             <button type="button" wire:click="$set('showModalPeriodo', false)"

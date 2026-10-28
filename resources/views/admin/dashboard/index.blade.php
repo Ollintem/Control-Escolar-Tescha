@@ -92,7 +92,7 @@
           <span>Jefes de Carrera</span>
         </button>
 
-        <button data-toast="Control Escolar" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+        <button data-nav id="btn-control-escolar" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
           <i data-lucide="graduation-cap" class="w-[18px] h-[18px]"></i>
           <span>Control Escolar</span>
         </button>
@@ -238,13 +238,13 @@
             <h2 class="m-0 text-[#293448] text-[17px]">Acciones rápidas de Administración</h2>
 
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-              <button data-toast="Crear Usuario" class="quick-action min-h-[124px] p-4 rounded-[13px] border border-[#f0eeec] bg-white text-[#253146] text-center transition-all duration-200 hover:border-[#ddc3cd] hover:bg-[#fffafa] hover:-translate-y-1 hover:shadow-lg">
+              <button type="button" onclick="crearUsuarioDesdeDashboard()" class="quick-action min-h-[124px] p-4 rounded-[13px] border border-[#f0eeec] bg-white text-[#253146] text-center transition-all duration-200 hover:border-[#ddc3cd] hover:bg-[#fffafa] hover:-translate-y-1 hover:shadow-lg">
                 <i class="grid place-items-center w-[42px] h-[42px] mx-auto mb-3 rounded-xl text-brand-500 bg-brand-100" data-lucide="user-plus"></i>
                 <b class="block text-[13px]">Crear Usuario</b>
                 <span class="block mt-1 text-[#929cad] text-[11px]">Alta de Admin/Docente</span>
               </button>
 
-              <button data-toast="Nuevo Periodo" class="quick-action min-h-[124px] p-4 rounded-[13px] border border-[#f0eeec] bg-white text-[#253146] text-center transition-all duration-200 hover:border-[#ddc3cd] hover:bg-[#fffafa] hover:-translate-y-1 hover:shadow-lg">
+              <button type="button" onclick="nuevoPeriodoDesdeDashboard()" class="quick-action min-h-[124px] p-4 rounded-[13px] border border-[#f0eeec] bg-white text-[#253146] text-center transition-all duration-200 hover:border-[#ddc3cd] hover:bg-[#fffafa] hover:-translate-y-1 hover:shadow-lg">
                 <i class="grid place-items-center w-[42px] h-[42px] mx-auto mb-3 rounded-xl text-blue-600 bg-blue-50" data-lucide="calendar-plus"></i>
                 <b class="block text-[13px]">Nuevo Periodo</b>
                 <span class="block mt-1 text-[#929cad] text-[11px]">Configurar ciclo escolar</span>
@@ -307,84 +307,50 @@
               </div>
             </article>
 
-            <article class="overflow-hidden rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.04)]">
-              <div class="flex items-center justify-between px-5 py-5 border-b border-[#f1efed]">
-                <h2 class="m-0 text-[#293448] text-base">Carreras Activas</h2>
-                <a href="#" data-toast="Gestión de carreras" class="text-brand-600 text-xs font-extrabold no-underline hover:text-brand-800">Gestionar →</a>
-              </div>
+    <!-- "Carreras Activas": se genera desde la tabla carreras (solo activas).
+         Clic en la fila / nombre / flecha = administrar la carrera.
+         Clic en "Editar" = editar sus datos básicos. -->
+    @php
+      $carrerasDashboard = \App\Models\Carrera::where('activo', 1)
+          ->orderBy('nombre')
+          ->get(['id_carrera', 'clave', 'nombre']);
+    @endphp
+    <article class="overflow-hidden rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_5px_13px_rgba(31,38,50,.04)]">
+      <div class="flex items-center justify-between px-5 py-5 border-b border-[#f1efed]">
+        <h2 class="m-0 text-[#293448] text-base">Carreras Activas</h2>
+        <a href="#" onclick="gestionarCarrerasDesdeDashboard(); return false;" class="text-brand-600 text-xs font-extrabold no-underline hover:text-brand-800">Gestionar →</a>
+      </div>
 
-              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería Electromecánica">
-                <div class="flex items-center gap-2">
-                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">IM</span>
-                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería Electromecánica</span>
-                  <span class="text-brand-500 text-base font-extrabold">›</span>
-                </div>
-                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
-                  <span>Configuración de retícula</span><span>Editar</span>
-                </div>
-              </div>
+      @forelse($carrerasDashboard as $carreraDashboard)
+        @php $claveCorta = \Illuminate\Support\Str::before($carreraDashboard['clave'], '-'); @endphp
+        <div class="career-item px-5 py-4 {{ $loop->last ? '' : 'border-b border-cream' }} cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]"
+          onclick="verCarreraDesdeDashboard({{ $carreraDashboard['id_carrera'] }})">
+          <div class="flex items-center gap-2">
+            <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">{{ $claveCorta }}</span>
+            <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">{{ $carreraDashboard['nombre'] }}</span>
+            <span class="text-brand-500 text-base font-extrabold">›</span>
+          </div>
+          <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
+            <span>Configuración de retícula</span>
+            <span class="cursor-pointer font-bold transition-colors hover:text-brand-600"
+              onclick="event.stopPropagation(); editarCarreraDesdeDashboard({{ $carreraDashboard['id_carrera'] }})">Editar</span>
+          </div>
+        </div>
+      @empty
+        <div class="px-5 py-6 text-center text-[#98a2b2] text-[12px]">No hay carreras activas registradas.</div>
+      @endforelse
 
-              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería Electrónica">
-                <div class="flex items-center gap-2">
-                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">IE</span>
-                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería Electrónica</span>
-                  <span class="text-brand-500 text-base font-extrabold">›</span>
-                </div>
-                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
-                  <span>Configuración de retícula</span><span>Editar</span>
-                </div>
-              </div>
-
-              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería Industrial">
-                <div class="flex items-center gap-2">
-                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">II</span>
-                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería Industrial</span>
-                  <span class="text-brand-500 text-base font-extrabold">›</span>
-                </div>
-                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
-                  <span>Configuración de retícula</span><span>Editar</span>
-                </div>
-              </div>
-
-              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería Informática">
-                <div class="flex items-center gap-2">
-                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">IINF</span>
-                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería Informática</span>
-                  <span class="text-brand-500 text-base font-extrabold">›</span>
-                </div>
-                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
-                  <span>Configuración de retícula</span><span>Editar</span>
-                </div>
-              </div>
-
-              <div class="career-item px-5 py-4 border-b border-cream cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería en Sistemas Computacionales">
-                <div class="flex items-center gap-2">
-                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">ISC</span>
-                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería en Sistemas Computacionales</span>
-                  <span class="text-brand-500 text-base font-extrabold">›</span>
-                </div>
-                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
-                  <span>Configuración de retícula</span><span>Editar</span>
-                </div>
-              </div>
-
-              <div class="career-item px-5 py-4 cursor-pointer transition-colors duration-150 hover:bg-[#fcfafb]" data-toast="Ingeniería en Administración">
-                <div class="flex items-center gap-2">
-                  <span class="px-1.5 py-1 rounded text-white bg-brand-500 text-[10px] font-extrabold">IA</span>
-                  <span class="flex-1 min-w-0 truncate text-[#354156] text-xs font-bold">Ingeniería en Administración</span>
-                  <span class="text-brand-500 text-base font-extrabold">›</span>
-                </div>
-                <div class="flex justify-between mt-2 text-[#98a2b2] text-[10px]">
-                  <span>Configuración de retícula</span><span>Editar</span>
-                </div>
-              </div>
-
-              <div class="flex justify-between px-5 py-4 text-[#748095] bg-[#fafafa] text-xs">
-                <span>Estatus global</span>
-                <b class="text-[#2a3548]">6 Carreras en Regla</b>
-              </div>
-            </article>
+      <div class="flex justify-between px-5 py-4 text-[#748095] bg-[#fafafa] text-xs">
+        <span>Estatus global</span>
+        <b class="text-[#2a3548]">{{ $carrerasDashboard->count() }} Carreras en Regla</b>
+      </div>
+    </article>
           </section>
+        </div>
+
+        <!-- VISTA CONTROL ESCOLAR · ADMINISTRACIÓN GENERAL -->
+        <div id="view-control-escolar" class="view-panel hidden">
+          @livewire('gestion-control-escolar-admin')
         </div>
 
         <!-- VISTA GESTIÓN DE USUARIOS Y ROLES (Livewire) -->
@@ -513,6 +479,7 @@
 
     /* ---------- Vistas / navegación ---------- */
     const viewDashboard = document.getElementById('view-dashboard');
+    const viewControlEscolar = document.getElementById('view-control-escolar');
     const viewRoles = document.getElementById('view-roles');
     const viewPermisos = document.getElementById('view-permisos');
     const viewDocentes = document.getElementById('view-docentes');
@@ -525,6 +492,7 @@
     const breadcrumbTitle = document.getElementById('breadcrumb-title');
 
     const btnDashboard = document.getElementById('btn-dashboard');
+    const btnControlEscolar = document.getElementById('btn-control-escolar');
     const btnRoles = document.getElementById('btn-roles');
     const btnDocentes = document.getElementById('btn-docentes');
     const btnJefesCarrera = document.getElementById('btn-jefes-carrera');
@@ -549,7 +517,7 @@
     }
 
     function hideAllViews() {
-      [viewDashboard, viewRoles, viewPermisos, viewDocentes, viewJefesCarrera, viewCarreras, viewSemestresPeriodos, viewMateriasPlan, viewAlumnos, viewGrupos].forEach(view => view.classList.add('hidden'));
+      [viewDashboard, viewControlEscolar, viewRoles, viewPermisos, viewDocentes, viewJefesCarrera, viewCarreras, viewSemestresPeriodos, viewMateriasPlan, viewAlumnos, viewGrupos].forEach(view => view.classList.add('hidden'));
     }
 
     function showDashboardView() {
@@ -557,6 +525,14 @@
       viewDashboard.classList.remove('hidden');
       breadcrumbTitle.textContent = 'Administración General';
       setActiveButton(btnDashboard);
+      closeSidebar();
+    }
+
+    function showControlEscolarView() {
+      hideAllViews();
+      viewControlEscolar.classList.remove('hidden');
+      breadcrumbTitle.textContent = 'Control Escolar';
+      setActiveButton(btnControlEscolar);
       closeSidebar();
     }
 
@@ -654,8 +630,51 @@
       aplicarTabUsuariosRoles(document.getElementById('tab-btn-roles'), !esUsuarios);
     }
 
+    /* ===== Accesos rápidos del Dashboard =====
+       Conectan los botones que ya existían con los módulos que ya existen.
+       No se crean rutas, controladores ni vistas nuevas: se navegua a la vista
+       correspondiente y Livewire.dispatch avisa al componente Livewire para
+       que abra su formulario. */
+    function crearUsuarioDesdeDashboard() {
+      showRolesView();
+      mostrarTabUsuariosRoles('usuarios');
+      if (window.Livewire) Livewire.dispatch('abrir-modal-crear-usuario');
+    }
+
+    function nuevoPeriodoDesdeDashboard() {
+      showSemestresPeriodosView();
+      if (window.Livewire) Livewire.dispatch('abrir-nuevo-periodo');
+    }
+
+    function gestionarCarrerasDesdeDashboard() {
+      showCarrerasView();
+    }
+
+    function verCarreraDesdeDashboard(carreraId) {
+      showCarrerasView();
+      if (window.Livewire) Livewire.dispatch('ver-carrera', [carreraId]);
+    }
+
+    function editarCarreraDesdeDashboard(carreraId) {
+      showCarrerasView();
+      if (window.Livewire) Livewire.dispatch('editar-carrera', [carreraId]);
+    }
+
+    function crearUsuarioControlEscolarDesdeDashboard() {
+      showRolesView();
+      mostrarTabUsuariosRoles('usuarios');
+      if (window.Livewire) Livewire.dispatch('abrir-modal-crear-control-escolar');
+    }
+
+    function editarUsuarioControlEscolarDesdeDashboard(userId) {
+      showRolesView();
+      mostrarTabUsuariosRoles('usuarios');
+      if (window.Livewire) Livewire.dispatch('abrir-modal-editar-control-escolar', { userId: userId });
+    }
+
     /* ---------- Eventos ---------- */
     btnDashboard.addEventListener('click', showDashboardView);
+    btnControlEscolar.addEventListener('click', showControlEscolarView);
     btnRoles.addEventListener('click', showRolesView);
     btnDocentes.addEventListener('click', showDocentesView);
     btnJefesCarrera.addEventListener('click', showJefesCarreraView);

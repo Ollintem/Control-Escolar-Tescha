@@ -18,7 +18,14 @@ use Illuminate\Support\Facades\Gate;
  *   calificaciones.id_inscripcion -> inscripciones ...
  *   historial_academico.id_alumno -> alumnos.id_carrera
  *   docentes.id_docente -> grupos.id_docente -> grupos.id_materia -> materias.id_carrera
- *     (NO existe docentes.id_carrera: el único vínculo real es por grupos/materias)
+ *     (docentes que IMPARTEN clases en la carrera)
+ *   carrera_docente (id_carrera, id_docente) -> docentes
+ *     (docentes que PERTENECEN formalmente a la carrera)
+ *
+ * Los dos conceptos se muestran por separado en el modulo Docentes:
+ *   A) PERTENECEN  -> tabla intermedia carrera_docente (incluso sin grupos)
+ *   B) IMPARTEN    -> docentes -> grupos -> materias -> carreras
+ * Un docente puede impartir en una carrera sin pertenecer formalmente a ella.
  *
  * Reglas:
  *  - Todo se filtra por LA CARRERA DEL JEFE; sin IDs fijos ni carrera hardcodeada.
@@ -36,6 +43,22 @@ class PanelJefeCarreraController extends Controller
      */
     public function index()
     {
+        // El dashboard resume datos de estos módulos; exige sus permisos de
+        // consulta para que sus contadores no se conviertan en un bypass.
+        foreach ([
+            'Jefes de Carrera',
+            'Carreras y Semestres',
+            'Periodos Escolares',
+            'Materias y Plan de Estudios',
+            'Docentes',
+            'Grupos y Asignaciones',
+            'Alumnos',
+            'Calificaciones y Actas',
+            'Historial Académico',
+        ] as $modulo) {
+            $this->exigir($modulo);
+        }
+
         $ctx = $this->contexto();
         $idCarrera = $ctx['id_carrera'];
 
@@ -45,7 +68,8 @@ class PanelJefeCarreraController extends Controller
             'carrera' => $ctx['carrera'],
             'idCarrera' => $idCarrera,
             'totalMaterias' => $this->contar('materias', $idCarrera),
-            'totalDocentes' => $idCarrera === null ? 0 : $this->docentesQuery($idCarrera)->count('d.id_docente'),
+            'totalDocentesPertenecen' => $idCarrera === null ? 0 : $this->docentesPertenecenQuery($idCarrera)->count(),
+            'totalDocentesImparten' => $idCarrera === null ? 0 : $this->docentesImpartenQuery($idCarrera)->distinct()->count('d.id_docente'),
             'totalGrupos' => $idCarrera === null ? 0 : $this->gruposQuery($idCarrera)->count(),
             'totalAlumnos' => $this->contar('alumnos', $idCarrera),
             'totalCalificaciones' => $idCarrera === null ? 0 : $this->calificacionesQuery($idCarrera)->count(),
@@ -69,25 +93,56 @@ class PanelJefeCarreraController extends Controller
         ]);
     }
 
-    /** Docentes ligados a MI carrera por grupos/materias (no existe docentes.id_carrera). */
+    /**
+     * Docentes de MI carrera: dos listas distintas.
+     *
+     *  A) docentesPertenecen -> PERTENECEN formalmente (carrera_docente),
+     *     aunque todavía no tengan grupos asignados.
+     *  B) docentesImparten   -> IMPARTEN clases aqui (grupos -> materias),
+     *     con su información académica. Pueden no pertenecer a la carrera.
+     */
     public function docentes()
     {
         $this->exigir('Docentes');
         $ctx = $this->contexto();
         $idCarrera = $ctx['id_carrera'];
 
+        $columnas = [
+            'd.id_docente',
+            'd.no_empleado',
+            'd.nombre',
+            'd.apellido_paterno',
+            'd.apellido_materno',
+            'd.email',
+            'd.activo',
+        ];
+
         return view('panels.jefe-carrera.docentes', [
-            'docentes' => $idCarrera === null ? collect() : $this->docentesQuery($idCarrera)
-                ->orderBy('d.apellido_paterno')
-                ->get([
-                    'd.id_docente',
-                    'd.no_empleado',
-                    'd.nombre',
-                    'd.apellido_paterno',
-                    'd.apellido_materno',
-                    'd.email',
-                    'd.activo',
-                ]),
+            'docentesPertenecen' => $idCarrera === null
+                ? collect()
+                : $this->docentesPertenecenQuery($idCarrera)
+                    ->orderBy('d.apellido_paterno')
+                    ->get($columnas),
+
+            'docentesImparten' => $idCarrera === null
+                ? collect()
+                : $this->docentesImpartenQuery($idCarrera)
+                    ->groupBy(
+                        'd.id_docente',
+                        'd.no_empleado',
+                        'd.nombre',
+                        'd.apellido_paterno',
+                        'd.apellido_materno',
+                        'd.email',
+                        'd.activo'
+                    )
+                    ->orderBy('d.apellido_paterno')
+                    ->get(array_merge($columnas, [
+                        DB::raw('COUNT(DISTINCT g.id_grupo) as grupos_impartidos'),
+                        DB::raw('COUNT(DISTINCT m.id_materia) as materias_impartidas'),
+                        DB::raw("GROUP_CONCAT(DISTINCT m.nombre ORDER BY m.nombre SEPARATOR ' · ') as nombres_materias"),
+                    ])),
+
             'idCarrera' => $idCarrera,
         ]);
     }
@@ -195,7 +250,7 @@ class PanelJefeCarreraController extends Controller
     private function exigir(string $modulo): void
     {
         abort_unless(
-            Gate::allows($modulo . '.ver'),
+            Gate::allows($modulo.'.ver'),
             403,
             'No tienes permiso para acceder a esta sección.'
         );
@@ -247,13 +302,37 @@ class PanelJefeCarreraController extends Controller
             ->where('m.id_carrera', $idCarrera);
     }
 
-    private function docentesQuery(?int $idCarrera)
+    /**
+     * A) Docentes que PERTENECEN a MI carrera (N:N `carrera_docente`).
+     *
+     * Es la pertenencia formal registrada desde los módulos Docentes o
+     * Usuarios y Roles: NO se deduce de materias ni grupos. Por eso aqui
+     * aparecen tambien los docentes que todavía no tienen grupos.
+     *
+     * `distinct()` evita filas repetidas si un docente estuviera en la
+     * tabla varias veces.
+     */
+    private function docentesPertenecenQuery(?int $idCarrera)
+    {
+        return DB::table('docentes as d')
+            ->join('carrera_docente as cd', 'cd.id_docente', '=', 'd.id_docente')
+            ->where('cd.id_carrera', $idCarrera)
+            ->distinct();
+    }
+
+    /**
+     * B) Docentes que IMPARTEN clases en MI carrera: siempre a través de
+     *    las asignaciones académicas (grupos -> materias -> carrera).
+     *
+     * Un docente puede impartir aquí sin pertenecer formalmente a la
+     * carrera, por lo que esta consulta es independiente de `carrera_docente`.
+     */
+    private function docentesImpartenQuery(?int $idCarrera)
     {
         return DB::table('docentes as d')
             ->join('grupos as g', 'g.id_docente', '=', 'd.id_docente')
             ->join('materias as m', 'm.id_materia', '=', 'g.id_materia')
-            ->where('m.id_carrera', $idCarrera)
-            ->distinct();
+            ->where('m.id_carrera', $idCarrera);
     }
 
     private function calificacionesQuery(?int $idCarrera)

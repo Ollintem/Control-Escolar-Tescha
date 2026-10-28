@@ -5,15 +5,26 @@
 
   <!-- Barra de búsqueda y botón -->
   <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 p-4 rounded-[17px] border border-[#ece9e6] bg-white shadow-[0_8px_22px_rgba(31,38,50,.045)]">
-    <div class="flex items-center gap-2.5 flex-1 sm:max-w-[430px] px-3.5 py-2.5 rounded-[11px] border border-[#e8e4e1] bg-[#faf9f8] text-[#8b95a5]">
-      <i data-lucide="search" class="w-[17px]"></i>
-      <input type="search" wire:model.live="search" placeholder="Buscar por no. control, nombre, apellido o carrera..." class="w-full border-0 outline-none bg-transparent text-[#253146] text-[13px] font-medium">
+    <div class="flex flex-col sm:flex-row gap-3 flex-1">
+      <div class="flex items-center gap-2.5 flex-1 sm:max-w-[430px] px-3.5 py-2.5 rounded-[11px] border border-[#e8e4e1] bg-[#faf9f8] text-[#8b95a5]">
+        <i data-lucide="search" class="w-[17px]"></i>
+        <input type="search" wire:model.live.debounce.300ms="search" placeholder="Buscar por no. control, nombre, apellido o carrera..." class="w-full border-0 outline-none bg-transparent text-[#253146] text-[13px] font-medium">
+      </div>
+      <select wire:model.live="filtroCarrera"
+        class="w-full sm:max-w-[280px] py-2.5 px-3 rounded-[11px] border border-[#e8e4e1] outline-none bg-white text-[#39465a] text-[12px] font-medium focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
+        <option value="">Todas las carreras</option>
+        @foreach($carrerasFiltro as $carreraFiltro)
+          <option value="{{ $carreraFiltro['id_carrera'] }}">{{ $carreraFiltro['clave'] }} · {{ $carreraFiltro['nombre'] }}{{ ! $carreraFiltro['activo'] ? ' (Inactiva)' : '' }}</option>
+        @endforeach
+      </select>
     </div>
-    <button type="button" wire:click="abrirModalCrear"
-      class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
-      <i data-lucide="plus" class="w-4 h-4"></i>
-      Nuevo Alumno
-    </button>
+    @if($puedeCrear)
+      <button type="button" wire:click="abrirModalCrear"
+        class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Nuevo Alumno
+      </button>
+    @endif
   </div>
 
   <!-- Mensajes flash (se ocultan automáticamente en 3s) -->
@@ -50,8 +61,8 @@
           <i data-lucide="user-check" class="w-5 h-5"></i>
         </div>
         <div>
-          <b class="block text-[#293448] text-lg">{{ collect($alumnos)->where('activo', 1)->count() }}</b>
-          <span class="text-[#919aaa] text-[11px]">Activos</span>
+          <b class="block text-[#293448] text-lg">{{ $alumnosActivosCount }}</b>
+          <span class="text-[#919aaa] text-[11px]">Activos en el sistema</span>
         </div>
       </div>
     </div>
@@ -61,8 +72,8 @@
           <i data-lucide="user-x" class="w-5 h-5"></i>
         </div>
         <div>
-          <b class="block text-[#293448] text-lg">{{ collect($alumnos)->where('activo', 0)->count() }}</b>
-          <span class="text-[#919aaa] text-[11px]">Inactivos</span>
+          <b class="block text-[#293448] text-lg">{{ $alumnosInactivosCount }}</b>
+          <span class="text-[#919aaa] text-[11px]">Inactivos en el sistema</span>
         </div>
       </div>
     </div>
@@ -72,7 +83,7 @@
           <i data-lucide="landmark" class="w-5 h-5"></i>
         </div>
         <div>
-          <b class="block text-[#293448] text-lg">{{ collect($alumnos)->pluck('id_carrera')->unique()->count() }}</b>
+          <b class="block text-[#293448] text-lg">{{ $carrerasConAlumnosCount }}</b>
           <span class="text-[#919aaa] text-[11px]">Carreras con alumnos</span>
         </div>
       </div>
@@ -86,7 +97,7 @@
         <h2 class="m-0 text-[#293448] text-base">Catálogo de Alumnos</h2>
         <span class="text-[#919aaa] text-[11px]">Alumnos registrados en el sistema TESCHA</span>
       </div>
-      <span class="text-[#919aaa] text-[11px]">{{ $alumnoCount }} registros</span>
+        <span class="text-[#919aaa] text-[11px]">{{ $alumnosFiltradosCount }} resultados · {{ $alumnoCount }} alumnos en el sistema</span>
     </div>
 
     <div class="overflow-x-auto">
@@ -103,7 +114,7 @@
         </thead>
         <tbody>
           @forelse($alumnos as $alu)
-            <tr class="transition-colors duration-150 hover:bg-[#fcfafb]">
+            <tr wire:key="alumno-{{ $alu->id_alumno }}" class="transition-colors duration-150 hover:bg-[#fcfafb]">
               <td class="px-5 py-4 border-b border-[#f2efed]">
                 <div class="flex items-center gap-3 min-w-[220px]">
                   <div class="grid place-items-center w-10 h-10 shrink-0 rounded-xl text-brand-500 bg-brand-100">
@@ -111,23 +122,23 @@
                   </div>
                   <div>
                     <span class="block text-[#263247] font-extrabold text-[13px]">
-                      {{ $alu['nombre'] }} {{ $alu['apellido_paterno'] }} {{ $alu['apellido_materno'] }}
+                      {{ $alu->nombre }} {{ $alu->apellido_paterno }} {{ $alu->apellido_materno }}
                     </span>
-                    <span class="block mt-0.5 text-[#99a2b0] text-[11px]">{{ $alu['carrera']['nombre'] ?? '—' }}</span>
+                    <span class="block mt-0.5 text-[#99a2b0] text-[11px]">{{ $alu->carrera?->nombre ?? '—' }}</span>
                   </div>
                 </div>
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed] text-[#39465a] text-[13px]">
-                <span class="px-1.5 py-0.5 rounded text-white bg-brand-500 text-[10px] font-extrabold">{{ $alu['no_control'] }}</span>
+                <span class="px-1.5 py-0.5 rounded text-white bg-brand-500 text-[10px] font-extrabold">{{ $alu->no_control }}</span>
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed] text-[#39465a] text-[13px]">
-                <span class="text-[#748095] text-[12px]">{{ $alu['carrera']['clave'] ?? '—' }}</span>
+                <span class="text-[#748095] text-[12px]">{{ $alu->carrera?->clave ?? '—' }}</span>
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed] text-[#39465a] text-[13px]">
-                {{ $alu['email'] }}
+                {{ $alu->email }}
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed]">
-                @if($alu['activo'])
+                @if($alu->activo)
                   <span class="inline-flex items-center gap-1.5 text-emerald-700 text-[11px] font-bold">
                     <span class="w-[7px] h-[7px] rounded-full bg-emerald-500 inline-block"></span>
                     Activo
@@ -141,15 +152,28 @@
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed]">
                 <div class="flex gap-1.5">
-                  <button wire:click="abrirModalEditar({{ $alu['id_alumno'] }})" title="Editar alumno"
-                    class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
-                    <i data-lucide="pencil" class="w-4 h-4"></i>
-                  </button>
-                  <button wire:click="eliminar({{ $alu['id_alumno'] }})" wire:confirm="¿Eliminar este alumno? Si tiene información relacionada se desactivará en su lugar."
-                    title="Eliminar alumno"
-                    class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                  </button>
+                  @if($puedeEditar)
+                    <button type="button" wire:click="abrirModalEditar({{ $alu->id_alumno }})" title="Editar alumno"
+                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
+                      <i data-lucide="pencil" class="w-4 h-4"></i>
+                    </button>
+                  @endif
+                  @if($alu->activo && $puedeEliminar)
+                    <button type="button" wire:click="desactivar({{ $alu->id_alumno }})"
+                      wire:confirm="¿Desactivar este alumno? Se conservarán su cuenta y todos sus registros académicos."
+                      aria-label="Desactivar alumno"
+                      class="inline-flex items-center justify-center gap-1.5 min-h-[34px] px-2.5 rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white text-[11px] font-bold transition-all duration-200 hover:text-amber-700 hover:border-amber-200 hover:bg-amber-50">
+                      <i data-lucide="user-round-x" class="w-4 h-4"></i>
+                      <span>Desactivar</span>
+                    </button>
+                  @elseif(! $alu->activo && $puedeEditar)
+                    <button type="button" wire:click="reactivar({{ $alu->id_alumno }})"
+                      aria-label="Reactivar alumno"
+                      class="inline-flex items-center justify-center gap-1.5 min-h-[34px] px-2.5 rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white text-[11px] font-bold transition-all duration-200 hover:text-emerald-700 hover:border-emerald-200 hover:bg-emerald-50">
+                      <i data-lucide="user-round-check" class="w-4 h-4"></i>
+                      <span>Reactivar</span>
+                    </button>
+                  @endif
                 </div>
               </td>
             </tr>
@@ -166,18 +190,21 @@
         </tbody>
       </table>
     </div>
+    @if($alumnos->hasPages())
+      <div class="px-5 py-4 border-t border-[#f1efed]">{{ $alumnos->links() }}</div>
+    @endif
   </section>
 
   <!-- Modal Crear / Editar Alumno -->
   @if($showModal)
-    <div class="fixed inset-0 z-[1000] grid place-items-center p-5 bg-black/55 backdrop-blur-sm" wire:click.self="$set('showModal', false)">
+    <div class="fixed inset-0 z-[1000] grid place-items-center p-5 bg-black/55 backdrop-blur-sm" wire:click.self="cerrarModal">
       <div class="w-full max-w-[560px] max-h-[calc(100vh-40px)] overflow-auto rounded-[20px] bg-white shadow-2xl">
         <div class="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-[#eeeae8]">
           <div>
             <h2 class="m-0 text-[#283348] text-lg">{{ $editingAlumnoId ? 'Editar alumno' : 'Nuevo alumno' }}</h2>
             <p class="mt-1 mb-0 text-[#919aaa] text-[11px]">{{ $editingAlumnoId ? 'Actualiza la información del alumno seleccionado.' : 'Registra un nuevo alumno en el sistema TESCHA.' }}</p>
           </div>
-          <button type="button" wire:click="$set('showModal', false)"
+          <button type="button" wire:click="cerrarModal"
             class="grid place-items-center w-[34px] h-[34px] rounded-[9px] text-[#788395] bg-[#f7f5f3] transition-colors hover:text-brand-700 hover:bg-brand-100">
             <i data-lucide="x" class="w-4 h-4"></i>
           </button>
@@ -189,9 +216,14 @@
               class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10 bg-white">
               <option value="">— Selecciona una carrera —</option>
               @foreach($carreras as $carr)
-                <option value="{{ $carr['id_carrera'] }}">{{ $carr['clave'] }} — {{ $carr['nombre'] }}</option>
+                <option value="{{ $carr['id_carrera'] }}" @selected($id_carrera == $carr['id_carrera'])>
+                  {{ $carr['clave'] }} — {{ $carr['nombre'] }}{{ ! $carr['activo'] ? ' (Inactiva, asignación actual)' : '' }}
+                </option>
               @endforeach
             </select>
+            @if($carreras === [])
+              <span class="text-red-500 text-xs mt-1 block">No hay carreras activas disponibles para registrar alumnos.</span>
+            @endif
             @error('id_carrera') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
           </div>
 
@@ -230,7 +262,7 @@
           </div>
         </div>
         <div class="flex justify-end gap-2 px-6 pb-6 pt-2 border-t border-[#eeeae8] mt-2">
-          <button type="button" wire:click="$set('showModal', false)"
+          <button type="button" wire:click="cerrarModal"
             class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
             Cancelar
           </button>
@@ -241,6 +273,48 @@
           </button>
         </div>
       </div>
+
+      @if($confirmacionCambioCarreraPendiente !== null)
+        <div class="fixed inset-0 z-[1100] grid place-items-center p-5 bg-black/60 backdrop-blur-sm" wire:click.self="cancelarConfirmacionCambioCarrera">
+          <div class="w-full max-w-[560px] overflow-hidden rounded-[20px] bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="confirmar-cambio-carrera-titulo">
+            <div class="px-6 pt-6 pb-4 border-b border-[#eeeae8]">
+              <h2 id="confirmar-cambio-carrera-titulo" class="m-0 text-[#283348] text-lg font-extrabold">Confirmar cambio de carrera</h2>
+              <p class="mt-2 mb-0 text-[#748095] text-sm">Estás cambiando la carrera de este alumno:</p>
+            </div>
+
+            <div class="grid gap-3 p-6">
+              <div class="p-3 rounded-xl bg-[#faf9f8] border border-[#ece9e6]">
+                <span class="block text-[#919aaa] text-[10px] font-extrabold uppercase tracking-wide">Carrera actual</span>
+                <strong class="block mt-1 text-[#293448] text-sm">{{ $confirmacionCambioCarreraPendiente['carrera_anterior'] }}</strong>
+              </div>
+              <div class="p-3 rounded-xl bg-brand-50 border border-[#f0dfe5]">
+                <span class="block text-brand-500 text-[10px] font-extrabold uppercase tracking-wide">Nueva carrera</span>
+                <strong class="block mt-1 text-brand-700 text-sm">{{ $confirmacionCambioCarreraPendiente['carrera_nueva'] }}</strong>
+              </div>
+
+              <div class="p-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-sm leading-6">
+                <p class="m-0">Las inscripciones, materias, grupos, calificaciones y el historial académico existentes se conservarán sin modificaciones.</p>
+                <p class="mt-2 mb-0">Este cambio no realizará equivalencias ni traslados automáticos de materias.</p>
+              </div>
+
+              <p class="m-0 text-[#748095] text-xs leading-5">Al confirmar también se guardarán los demás cambios pendientes del formulario, si los hay.</p>
+              <p class="m-0 text-[#293448] text-sm font-semibold">¿Deseas continuar?</p>
+            </div>
+
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-6 pb-6">
+              <button type="button" wire:click="cancelarConfirmacionCambioCarrera"
+                class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
+                Cancelar
+              </button>
+              <button type="button" wire:click="confirmarCambioCarrera" wire:loading.attr="disabled" wire:target="confirmarCambioCarrera"
+                class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                Confirmar cambio
+              </button>
+            </div>
+          </div>
+        </div>
+      @endif
     </div>
   @endif
 
