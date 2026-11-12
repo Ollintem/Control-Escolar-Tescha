@@ -108,6 +108,7 @@
       class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8] no-underline">
       Volver al catálogo
     </a>
+    @can('Usuarios y Roles.editar')
     <button type="button" wire:click="guardar" wire:loading.attr="disabled"
       class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)] disabled:opacity-50">
       <span wire:loading.remove wire:target="guardar">
@@ -118,6 +119,7 @@
       </span>
       Guardar cambios
     </button>
+    @endcan
   </div>
 
   @if($guardado)

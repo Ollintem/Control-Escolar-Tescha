@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\DocenteActivo;
+use App\Models\Docente;
 use App\Models\PeriodoEscolar;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Panel Docente (misma arquitectura que el Panel Alumno).
@@ -13,15 +15,12 @@ use Illuminate\Support\Facades\DB;
  *   users.id_docente        -> docentes.id_docente   (vínculo de la cuenta)
  *   grupos.id_docente       -> docentes.id_docente   (sus grupos)
  *   inscripciones.id_grupo  -> grupos.id_grupo       (sus alumnos)
- *   calificaciones.id_inscripcion -> inscripciones   (calificaciones)
- *   calificaciones.id_capturada_por -> docentes      (lo que él capturó)
+ *   calificaciones.id_inscripcion -> inscripciones -> grupos
  *
  * Reglas:
- *  - SOLO consulta información ligada al docente autenticado; no existe ningún
- *    parámetro de ruta/petición que permita ver grupos o alumnos de otro.
- *  - NO inventa datos ni relaciones: si users.id_docente es NULL, o las tablas
- *    están vacías, se muestran los estados vacíos correspondientes.
- *  - No se modifican tablas, roles ni permisos para esto.
+ *  - El perfil docente se verifica en el middleware del grupo de rutas.
+ *  - Las consultas se limitan al perfil vinculado al usuario autenticado.
+ *  - Cada consulta exige los Gates de los datos que presenta.
  */
 class PanelDocenteController extends Controller
 {
@@ -30,19 +29,31 @@ class PanelDocenteController extends Controller
      */
     public function index()
     {
-        $idDocente = $this->idDocente();
+        $this->exigir('Docentes.ver');
+
+        $docente = $this->docenteAutenticado();
+        $idDocente = (int) $docente->id_docente;
+        $puedeVerPeriodo = Gate::allows('Periodos Escolares.ver');
+        $puedeVerGrupos = Gate::allows('Grupos y Asignaciones.ver');
+        $puedeVerAlumnos = Gate::allows('Alumnos.ver')
+            && Gate::allows('Inscripciones.ver')
+            && Gate::allows('Grupos y Asignaciones.ver');
+        $puedeVerCalificaciones = Gate::allows('Calificaciones y Actas.ver')
+            && Gate::allows('Grupos y Asignaciones.ver');
 
         return view('panels.docente.index', [
-            'periodoActivo' => $this->periodoActivo(),
+            'periodoActivo' => $puedeVerPeriodo ? $this->periodoActivo() : null,
             'idDocente' => $idDocente,
-            'docente' => $this->registroDocente($idDocente),
-            'totalGrupos' => $this->contar($idDocente, 'grupos'),
-            'totalAlumnos' => $idDocente === null ? 0 : (int) DB::table('inscripciones as i')
+            'docente' => $docente,
+            'totalGrupos' => $puedeVerGrupos ? $this->contar($idDocente, 'grupos') : '—',
+            'totalAlumnos' => $puedeVerAlumnos ? (int) DB::table('inscripciones as i')
                 ->join('grupos as g', 'g.id_grupo', '=', 'i.id_grupo')
                 ->where('g.id_docente', $idDocente)
                 ->distinct()
-                ->count('i.id_alumno'),
-            'totalCalificaciones' => $idDocente === null ? 0 : $this->calificacionesQuery($idDocente)->count(),
+                ->count('i.id_alumno') : '—',
+            'totalCalificaciones' => $puedeVerCalificaciones
+                ? $this->calificacionesQuery($idDocente)->count()
+                : '—',
         ]);
     }
 
@@ -51,27 +62,39 @@ class PanelDocenteController extends Controller
      */
     public function grupos()
     {
-        $idDocente = $this->idDocente();
+        $this->exigir('Grupos y Asignaciones.ver');
 
-        $grupos = collect();
+        $idDocente = (int) $this->docenteAutenticado()->id_docente;
+        $puedeVerMaterias = Gate::allows('Materias y Plan de Estudios.ver');
+        $puedeVerPeriodos = Gate::allows('Periodos Escolares.ver');
 
-        if ($idDocente !== null) {
-            $grupos = DB::table('grupos as g')
-                ->leftJoin('materias as m', 'm.id_materia', '=', 'g.id_materia')
-                ->leftJoin('periodo_escolars as p', 'p.id_periodo', '=', 'g.id_periodo')
-                ->where('g.id_docente', $idDocente)
-                ->orderBy('g.nombre')
-                ->get([
-                    'g.nombre as grupo',
-                    'g.cupo_maximo',
-                    'g.activo',
-                    'm.clave as clave_materia',
-                    'm.nombre as materia',
-                    'm.creditos',
-                    'p.clave as clave_periodo',
-                    'p.nombre as periodo',
-                ]);
+        $query = DB::table('grupos as g')->where('g.id_docente', $idDocente);
+        $columnas = [
+            'g.nombre as grupo',
+            'g.cupo_maximo',
+            'g.activo',
+        ];
+
+        if ($puedeVerMaterias) {
+            $query->leftJoin('materias as m', 'm.id_materia', '=', 'g.id_materia');
+            array_push($columnas, 'm.clave as clave_materia', 'm.nombre as materia', 'm.creditos');
+        } else {
+            array_push(
+                $columnas,
+                DB::raw('NULL as clave_materia'),
+                DB::raw('NULL as materia'),
+                DB::raw('NULL as creditos')
+            );
         }
+
+        if ($puedeVerPeriodos) {
+            $query->leftJoin('periodo_escolars as p', 'p.id_periodo', '=', 'g.id_periodo');
+            array_push($columnas, 'p.clave as clave_periodo', 'p.nombre as periodo');
+        } else {
+            array_push($columnas, DB::raw('NULL as clave_periodo'), DB::raw('NULL as periodo'));
+        }
+
+        $grupos = $query->orderBy('g.nombre')->get($columnas);
 
         return view('panels.docente.grupos', [
             'grupos' => $grupos,
@@ -85,29 +108,40 @@ class PanelDocenteController extends Controller
      */
     public function alumnos()
     {
-        $idDocente = $this->idDocente();
+        $this->exigir('Alumnos.ver', 'Inscripciones.ver', 'Grupos y Asignaciones.ver');
 
-        $alumnos = collect();
+        $idDocente = (int) $this->docenteAutenticado()->id_docente;
+        $puedeVerMaterias = Gate::allows('Materias y Plan de Estudios.ver');
+        $puedeVerCalificaciones = Gate::allows('Calificaciones y Actas.ver');
 
-        if ($idDocente !== null) {
-            $alumnos = DB::table('inscripciones as i')
-                ->join('grupos as g', 'g.id_grupo', '=', 'i.id_grupo')
-                ->leftJoin('alumnos as a', 'a.id_alumno', '=', 'i.id_alumno')
-                ->leftJoin('materias as m', 'm.id_materia', '=', 'g.id_materia')
-                ->where('g.id_docente', $idDocente)
-                ->orderBy('g.nombre')
-                ->orderBy('a.apellido_paterno')
-                ->get([
-                    'a.no_control',
-                    'a.nombre as nombre_alumno',
-                    'a.apellido_paterno',
-                    'a.apellido_materno',
-                    'g.nombre as grupo',
-                    'm.nombre as materia',
-                    'i.estatus',
-                    'i.calificacion_final',
-                ]);
+        $query = DB::table('inscripciones as i')
+            ->join('grupos as g', 'g.id_grupo', '=', 'i.id_grupo')
+            ->leftJoin('alumnos as a', 'a.id_alumno', '=', 'i.id_alumno')
+            ->where('g.id_docente', $idDocente);
+        $columnas = [
+            'a.no_control',
+            'a.nombre as nombre_alumno',
+            'a.apellido_paterno',
+            'a.apellido_materno',
+            'i.estatus',
+            'g.nombre as grupo',
+        ];
+
+        if ($puedeVerMaterias) {
+            $query->leftJoin('materias as m', 'm.id_materia', '=', 'g.id_materia');
+            $columnas[] = 'm.nombre as materia';
+        } else {
+            $columnas[] = DB::raw('NULL as materia');
         }
+
+        $columnas[] = $puedeVerCalificaciones
+            ? 'i.calificacion_final'
+            : DB::raw('NULL as calificacion_final');
+
+        $alumnos = $query
+            ->orderBy('g.nombre')
+            ->orderBy('a.apellido_paterno')
+            ->get($columnas);
 
         return view('panels.docente.alumnos', [
             'alumnos' => $alumnos,
@@ -116,30 +150,53 @@ class PanelDocenteController extends Controller
     }
 
     /**
-     * Calificaciones: parciales de SUS grupos o los que él mismo capturó
-     * (calificaciones.id_capturada_por = docente autenticado).
+     * Calificaciones: parciales inscritos en grupos asignados al docente autenticado.
      */
     public function calificaciones()
     {
-        $idDocente = $this->idDocente();
+        $this->exigir('Calificaciones y Actas.ver');
 
-        $calificaciones = collect();
+        $idDocente = (int) $this->docenteAutenticado()->id_docente;
+        $puedeVerAlumnos = Gate::allows('Alumnos.ver');
+        $puedeVerGrupos = Gate::allows('Grupos y Asignaciones.ver');
+        $puedeVerMaterias = Gate::allows('Materias y Plan de Estudios.ver');
 
-        if ($idDocente !== null) {
-            $calificaciones = $this->calificacionesQuery($idDocente)
-                ->orderBy('g.nombre')
-                ->orderBy('c.parcial')
-                ->get([
-                    'c.parcial',
-                    'c.calificacion',
-                    'c.observaciones',
-                    'a.no_control',
-                    'a.nombre as nombre_alumno',
-                    'a.apellido_paterno',
-                    'g.nombre as grupo',
-                    'm.nombre as materia',
-                ]);
+        $query = $this->calificacionesQuery($idDocente);
+        $columnas = [
+            'c.parcial',
+            'c.calificacion',
+            'c.observaciones',
+        ];
+
+        if ($puedeVerAlumnos) {
+            $query->leftJoin('alumnos as a', 'a.id_alumno', '=', 'i.id_alumno');
+            array_push($columnas, 'a.no_control', 'a.nombre as nombre_alumno', 'a.apellido_paterno');
+        } else {
+            array_push(
+                $columnas,
+                DB::raw('NULL as no_control'),
+                DB::raw('NULL as nombre_alumno'),
+                DB::raw('NULL as apellido_paterno')
+            );
         }
+
+        if ($puedeVerGrupos) {
+            $columnas[] = 'g.nombre as grupo';
+        } else {
+            $columnas[] = DB::raw('NULL as grupo');
+        }
+
+        if ($puedeVerMaterias) {
+            $query->leftJoin('materias as m', 'm.id_materia', '=', 'g.id_materia');
+            $columnas[] = 'm.nombre as materia';
+        } else {
+            $columnas[] = DB::raw('NULL as materia');
+        }
+
+        $calificaciones = $query
+            ->orderBy('g.nombre')
+            ->orderBy('c.parcial')
+            ->get($columnas);
 
         return view('panels.docente.calificaciones', [
             'calificaciones' => $calificaciones,
@@ -147,24 +204,13 @@ class PanelDocenteController extends Controller
         ]);
     }
 
-    /**
-     * Vínculo users.id_docente -> docentes.id_docente.
-     * NULL si la cuenta no tiene vinculado un registro docente.
-     */
-    private function idDocente(): ?int
+    private function docenteAutenticado(): Docente
     {
-        $idDocente = Auth::user()?->id_docente;
+        $docente = request()->attributes->get(DocenteActivo::DOCENTE_ATTRIBUTE);
 
-        return $idDocente === null ? null : (int) $idDocente;
-    }
+        abort_unless($docente instanceof Docente, 403);
 
-    private function registroDocente(?int $idDocente): ?object
-    {
-        if ($idDocente === null) {
-            return null;
-        }
-
-        return DB::table('docentes')->where('id_docente', $idDocente)->first();
+        return $docente;
     }
 
     private function periodoActivo(): ?PeriodoEscolar
@@ -186,9 +232,17 @@ class PanelDocenteController extends Controller
         return DB::table('calificaciones as c')
             ->join('inscripciones as i', 'i.id_inscripcion', '=', 'c.id_inscripcion')
             ->join('grupos as g', 'g.id_grupo', '=', 'i.id_grupo')
-            ->leftJoin('alumnos as a', 'a.id_alumno', '=', 'i.id_alumno')
-            ->leftJoin('materias as m', 'm.id_materia', '=', 'g.id_materia')
-            ->where(fn ($q) => $q->where('g.id_docente', $idDocente)
-                ->orWhere('c.id_capturada_por', $idDocente));
+            ->where('g.id_docente', $idDocente);
+    }
+
+    private function exigir(string ...$habilidades): void
+    {
+        foreach ($habilidades as $habilidad) {
+            abort_unless(
+                Gate::allows($habilidad),
+                403,
+                'No tienes permiso para consultar esta información.'
+            );
+        }
     }
 }

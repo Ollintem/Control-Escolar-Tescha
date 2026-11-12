@@ -129,6 +129,11 @@
           <span>Grupos</span>
         </button>
 
+        <button data-nav id="btn-inscripciones" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
+          <i data-lucide="file-text" class="w-[18px] h-[18px]"></i>
+          <span>Inscripciones</span>
+        </button>
+
         <p class="mx-3 mt-3.5 mb-1.5 text-white/45 text-[10px] font-extrabold tracking-[.12em]">REPORTES Y AUDITORÍA</p>
 
         <button data-toast="Bitácora / Logs" class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl text-white/70 border-l-[3px] border-transparent font-semibold text-[13px] text-left transition-all duration-200 hover:text-white hover:bg-white/10 hover:translate-x-0.5">
@@ -417,6 +422,11 @@
           @livewire('gestion-grupos')
         </div>
 
+        <!-- VISTA GESTIÓN DE INSCRIPCIONES (Livewire) -->
+        <div id="view-inscripciones" class="view-panel hidden">
+          @livewire('gestion-inscripciones')
+        </div>
+
 
       </main>
     </div>
@@ -489,6 +499,7 @@
     const viewMateriasPlan = document.getElementById('view-materias-plan');
     const viewAlumnos = document.getElementById('view-alumnos');
     const viewGrupos = document.getElementById('view-grupos');
+    const viewInscripciones = document.getElementById('view-inscripciones');
     const breadcrumbTitle = document.getElementById('breadcrumb-title');
 
     const btnDashboard = document.getElementById('btn-dashboard');
@@ -501,6 +512,7 @@
     const btnMateriasPlan = document.getElementById('btn-materias-plan');
     const btnAlumnos = document.getElementById('btn-alumnos');
     const btnGrupos = document.getElementById('btn-grupos');
+    const btnInscripciones = document.getElementById('btn-inscripciones');
 
     const navActiveClasses = ['bg-white/10', 'text-white', 'border-gold-300'];
     const navInactiveClasses = ['text-white/70', 'border-transparent'];
@@ -517,7 +529,7 @@
     }
 
     function hideAllViews() {
-      [viewDashboard, viewControlEscolar, viewRoles, viewPermisos, viewDocentes, viewJefesCarrera, viewCarreras, viewSemestresPeriodos, viewMateriasPlan, viewAlumnos, viewGrupos].forEach(view => view.classList.add('hidden'));
+      [viewDashboard, viewControlEscolar, viewRoles, viewPermisos, viewDocentes, viewJefesCarrera, viewCarreras, viewSemestresPeriodos, viewMateriasPlan, viewAlumnos, viewGrupos, viewInscripciones].forEach(view => view.classList.add('hidden'));
     }
 
     function showDashboardView() {
@@ -607,6 +619,14 @@
       closeSidebar();
     }
 
+    function showInscripcionesView() {
+      hideAllViews();
+      viewInscripciones.classList.remove('hidden');
+      breadcrumbTitle.textContent = 'Gestión de Inscripciones';
+      setActiveButton(btnInscripciones);
+      closeSidebar();
+    }
+
     /* ---------- Tabs Usuarios / Roles (dentro de "Usuarios y Roles") ---------- */
     function aplicarTabUsuariosRoles(btn, activo) {
       // Estado activo: gradiente de marca. Estado inactivo: fondo blanco.
@@ -683,6 +703,7 @@
     btnMateriasPlan.addEventListener('click', showMateriasPlanView);
     btnAlumnos.addEventListener('click', showAlumnosView);
     btnGrupos.addEventListener('click', showGruposView);
+    btnInscripciones.addEventListener('click', showInscripcionesView);
   </script>
   @livewireScripts
 </body>

@@ -14,17 +14,21 @@
       @endif
     </div>
     @if($tab === 'materias')
+      @can('Materias y Plan de Estudios.crear')
       <button type="button" wire:click="abrirModalMateriaCrear"
         class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
         <i data-lucide="plus" class="w-4 h-4"></i>
         Nueva Materia
       </button>
+      @endcan
     @else
+      @can('Materias y Plan de Estudios.crear')
       <button type="button" wire:click="abrirModalPlanCrear"
         class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
         <i data-lucide="plus" class="w-4 h-4"></i>
         Nuevo Plan
       </button>
+      @endcan
     @endif
   </div>
 
@@ -180,15 +184,12 @@
                 </td>
                 <td class="px-5 py-4 border-b border-[#f2efed]">
                   <div class="flex gap-1.5">
+                    @can('Materias y Plan de Estudios.editar')
                     <button wire:click="abrirModalMateriaEditar({{ $mat['id_materia'] }})" title="Editar materia"
                       class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
                       <i data-lucide="pencil" class="w-4 h-4"></i>
                     </button>
-                    <button wire:click="eliminarMateria({{ $mat['id_materia'] }})" wire:confirm="¿Eliminar esta materia?"
-                      title="Eliminar materia"
-                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
-                      <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    @endcan
                   </div>
                 </td>
               </tr>
@@ -272,11 +273,23 @@
               class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
               Cancelar
             </button>
+            @if($editingMateriaId)
+              @can('Materias y Plan de Estudios.editar')
             <button type="button" wire:click="guardarMateria"
               class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
               <i data-lucide="check" class="w-4 h-4"></i>
-              {{ $editingMateriaId ? 'Guardar cambios' : 'Registrar materia' }}
+              Guardar cambios
             </button>
+              @endcan
+            @else
+              @can('Materias y Plan de Estudios.crear')
+            <button type="button" wire:click="guardarMateria"
+              class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              Registrar materia
+            </button>
+              @endcan
+            @endif
           </div>
         </div>
       </div>
@@ -401,15 +414,19 @@
                 </td>
                 <td class="px-5 py-4 border-b border-[#f2efed]">
                   <div class="flex gap-1.5">
+                    @can('Materias y Plan de Estudios.editar')
                     <button wire:click="abrirModalPlanEditar({{ $plan['id_plan_estudio'] }})" title="Editar plan"
                       class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
                       <i data-lucide="pencil" class="w-4 h-4"></i>
                     </button>
+                    @endcan
+                    @can('Materias y Plan de Estudios.eliminar')
                     <button wire:click="eliminarPlan({{ $plan['id_plan_estudio'] }})" wire:confirm="¿Eliminar este plan de estudios?"
                       title="Eliminar plan"
                       class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
                       <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
+                    @endcan
                   </div>
                 </td>
               </tr>
@@ -481,11 +498,23 @@
               class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
               Cancelar
             </button>
+            @if($editingPlanId)
+              @can('Materias y Plan de Estudios.editar')
             <button type="button" wire:click="guardarPlan"
               class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
               <i data-lucide="check" class="w-4 h-4"></i>
-              {{ $editingPlanId ? 'Guardar cambios' : 'Registrar plan' }}
+              Guardar cambios
             </button>
+              @endcan
+            @else
+              @can('Materias y Plan de Estudios.crear')
+            <button type="button" wire:click="guardarPlan"
+              class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              Registrar plan
+            </button>
+              @endcan
+            @endif
           </div>
         </div>
       </div>

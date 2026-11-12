@@ -115,7 +115,7 @@
           @endforeach
         </select>
 
-        @if($roleSeleccionado && $roleSeleccionado->id_rol == 1)
+        @if($esAdministrador)
           <span class="flex items-center gap-1.5 text-gold-500 text-xs font-extrabold bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200">
             <i data-lucide="lock" class="w-3 h-3"></i>
             Acceso total — No editable
@@ -143,6 +143,7 @@
     <form method="POST" action="{{ route('permisos.update') }}" id="form-permisos">
       @csrf
       <input type="hidden" name="role_id" value="{{ $roleSeleccionado->id_rol }}">
+      <input type="hidden" name="matrix_version" value="{{ $matrixVersion }}">
 
       <div class="bg-white rounded-2xl shadow-[0_8px_30px_rgba(31,38,50,.07)] border border-[#ece9e6] overflow-hidden">
         <table class="w-full text-sm">
@@ -171,7 +172,7 @@
                 @foreach(['ver', 'crear', 'editar', 'eliminar'] as $accion)
                   @php
                     $permiso = $acciones->firstWhere('accion', $accion);
-                    $isAdmin = $roleSeleccionado && $roleSeleccionado->id_rol == 1;
+                    $isAdmin = $esAdministrador;
                   @endphp
                   <td class="text-center px-6 py-4">
                     @if($permiso)
@@ -198,7 +199,8 @@
       </div>
 
       <!-- Botón Guardar -->
-      @if(!($roleSeleccionado && $roleSeleccionado->id_rol == 1))
+      @if(!$esAdministrador)
+      @can('Usuarios y Roles.editar')
       <div class="flex justify-end mt-6">
         <button
           type="submit"
@@ -208,6 +210,7 @@
           Guardar Cambios
         </button>
       </div>
+      @endcan
       @endif
     </form>
     @endif

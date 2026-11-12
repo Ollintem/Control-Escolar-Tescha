@@ -9,11 +9,13 @@
       <i data-lucide="search" class="w-[17px]"></i>
       <input type="search" wire:model.live="search" placeholder="Buscar rol por nombre o descripción..." class="w-full border-0 outline-none bg-transparent text-[#253146] text-[13px] font-medium">
     </div>
+    @can('Usuarios y Roles.crear')
     <button type="button" wire:click="abrirModalCrear"
       class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
       <i data-lucide="plus" class="w-4 h-4"></i>
       Nuevo rol
     </button>
+    @endcan
   </div>
 
   <!-- Mensajes flash (se ocultan automáticamente en 3s) -->
@@ -61,7 +63,7 @@
         </thead>
         <tbody>
           @forelse($roles as $role)
-            @php $isAdmin = $role['id_rol'] == 1; @endphp
+            @php $isAdmin = mb_strtolower(trim($role['nombre'])) === 'administrador'; @endphp
             <tr class="transition-colors duration-150 hover:bg-[#fcfafb]">
               <td class="px-5 py-4 border-b border-[#f2efed]">
                 <div class="flex items-center gap-3 min-w-[220px]">
@@ -90,10 +92,13 @@
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed]">
                 <div class="flex gap-1.5">
+                  @can('Usuarios y Roles.editar')
                   <button wire:click="abrirModalEditar({{ $role['id_rol'] }})" title="Editar rol"
                     class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
                     <i data-lucide="pencil" class="w-4 h-4"></i>
                   </button>
+                  @endcan
+                  @can('Usuarios y Roles.eliminar')
                   @if(!$isAdmin)
                     <button wire:click="eliminar({{ $role['id_rol'] }})" wire:confirm="¿Eliminar este rol?"
                       title="Eliminar rol"
@@ -106,6 +111,7 @@
                       <i data-lucide="lock" class="w-4 h-4"></i>
                     </button>
                   @endif
+                  @endcan
                 </div>
               </td>
             </tr>
@@ -137,7 +143,7 @@
           <div class="mb-4">
             <label class="block mb-1.5 text-[#4b5769] text-[11px] font-extrabold">Nombre del rol</label>
             <input type="text" wire:model="nombre" placeholder="Ej. Coordinador Académico"
-              {{ $editingRoleId == 1 ? 'readonly' : '' }}
+              {{ $editingRoleId && mb_strtolower(trim((string) $nombre)) === 'administrador' ? 'readonly' : '' }}
               class="w-full py-2.5 px-3 rounded-[10px] border border-[#e3dfdc] outline-none text-[#293448] font-medium text-[13px] focus:border-[#b97a91] focus:ring-4 focus:ring-brand-500/10">
             @error('nombre') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
           </div>
@@ -153,11 +159,23 @@
             class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
             Cancelar
           </button>
+          @if($editingRoleId)
+            @can('Usuarios y Roles.editar')
           <button type="button" wire:click="guardar"
             class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
             <i data-lucide="check" class="w-4 h-4"></i>
-            {{ $editingRoleId ? 'Guardar cambios' : 'Crear rol' }}
+            Guardar cambios
           </button>
+            @endcan
+          @else
+            @can('Usuarios y Roles.crear')
+          <button type="button" wire:click="guardar"
+            class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            Crear rol
+          </button>
+            @endcan
+          @endif
         </div>
       </div>
     </div>

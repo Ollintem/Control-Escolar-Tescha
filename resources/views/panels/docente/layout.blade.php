@@ -79,31 +79,43 @@
         {{-- ===== ÚNICOS MÓDULOS DEL DOCENTE: sin módulos administrativos ===== --}}
         <p class="mx-3 mt-3.5 mb-1.5 text-white/45 text-[10px] font-extrabold tracking-[.12em]">PRINCIPAL</p>
 
-        <a href="{{ route('panel.docente.index') }}"
-           class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl border-l-[3px] font-semibold text-[13px] text-left transition-all duration-200 {{ $navClases(request()->routeIs('panel.docente.index')) }}">
-          <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]"></i>
-          <span>Inicio</span>
-        </a>
+        @can('Docentes.ver')
+          <a href="{{ route('panel.docente.index') }}"
+             class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl border-l-[3px] font-semibold text-[13px] text-left transition-all duration-200 {{ $navClases(request()->routeIs('panel.docente.index')) }}">
+            <i data-lucide="layout-dashboard" class="w-[18px] h-[18px]"></i>
+            <span>Inicio</span>
+          </a>
+        @endcan
 
         <p class="mx-3 mt-3.5 mb-1.5 text-white/45 text-[10px] font-extrabold tracking-[.12em]">MI ACTIVIDAD ACADÉMICA</p>
 
-        <a href="{{ route('panel.docente.grupos') }}"
-           class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl border-l-[3px] font-semibold text-[13px] text-left transition-all duration-200 {{ $navClases(request()->routeIs('panel.docente.grupos')) }}">
-          <i data-lucide="grid-2x2" class="w-[18px] h-[18px]"></i>
-          <span>Mis Grupos</span>
-        </a>
+        @can('Grupos y Asignaciones.ver')
+          <a href="{{ route('panel.docente.grupos') }}"
+             class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl border-l-[3px] font-semibold text-[13px] text-left transition-all duration-200 {{ $navClases(request()->routeIs('panel.docente.grupos')) }}">
+            <i data-lucide="grid-2x2" class="w-[18px] h-[18px]"></i>
+            <span>Mis Grupos</span>
+          </a>
+        @endcan
 
+        @can('Alumnos.ver')
+          @can('Inscripciones.ver')
+            @can('Grupos y Asignaciones.ver')
         <a href="{{ route('panel.docente.alumnos') }}"
            class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl border-l-[3px] font-semibold text-[13px] text-left transition-all duration-200 {{ $navClases(request()->routeIs('panel.docente.alumnos')) }}">
           <i data-lucide="users-round" class="w-[18px] h-[18px]"></i>
           <span>Mis Alumnos</span>
         </a>
+            @endcan
+          @endcan
+        @endcan
 
+        @can('Calificaciones y Actas.ver')
         <a href="{{ route('panel.docente.calificaciones') }}"
            class="nav-btn flex items-center w-full gap-2.5 px-3 py-2.5 rounded-xl border-l-[3px] font-semibold text-[13px] text-left transition-all duration-200 {{ $navClases(request()->routeIs('panel.docente.calificaciones')) }}">
           <i data-lucide="clipboard-list" class="w-[18px] h-[18px]"></i>
           <span>Calificaciones</span>
         </a>
+        @endcan
       </nav>
 
       <div class="mt-auto pt-4 px-2.5 border-t border-white/10">

@@ -6,6 +6,7 @@ use App\Http\Controllers\PanelDocenteController;
 use App\Http\Controllers\PanelJefeCarreraController;
 use App\Http\Controllers\PermisoController;
 use App\Http\Middleware\AlumnoActivo;
+use App\Http\Middleware\DocenteActivo;
 use App\Http\Middleware\JefeCarreraActivo;
 use Illuminate\Support\Facades\Route;
 
@@ -37,12 +38,15 @@ Route::middleware(['auth'])->group(function () {
     // ===== PANEL DEL DOCENTE (misma arquitectura que el Panel Alumno) =====
     // Protección doble: sesión iniciada (grupo 'auth') + rol real 'Docente'
     // resuelto por roles.nombre. Alumnos y Administradores reciben 403.
-    Route::middleware('rol:Docente')->prefix('panel/docente')->name('panel.docente.')->group(function () {
-        Route::get('/', [PanelDocenteController::class, 'index'])->name('index');
-        Route::get('/grupos', [PanelDocenteController::class, 'grupos'])->name('grupos');
-        Route::get('/alumnos', [PanelDocenteController::class, 'alumnos'])->name('alumnos');
-        Route::get('/calificaciones', [PanelDocenteController::class, 'calificaciones'])->name('calificaciones');
-    });
+    Route::middleware(['rol:Docente', DocenteActivo::class])
+        ->prefix('panel/docente')
+        ->name('panel.docente.')
+        ->group(function () {
+            Route::get('/', [PanelDocenteController::class, 'index'])->name('index');
+            Route::get('/grupos', [PanelDocenteController::class, 'grupos'])->name('grupos');
+            Route::get('/alumnos', [PanelDocenteController::class, 'alumnos'])->name('alumnos');
+            Route::get('/calificaciones', [PanelDocenteController::class, 'calificaciones'])->name('calificaciones');
+        });
 
     // ===== PANEL DEL JEFE DE CARRERA (misma arquitectura que Alumno/Docente) =====
     // Protección doble: sesión iniciada (grupo 'auth') + rol real 'Jefe de

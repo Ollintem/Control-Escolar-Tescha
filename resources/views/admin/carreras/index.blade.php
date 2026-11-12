@@ -9,11 +9,13 @@
       <i data-lucide="search" class="w-[17px]"></i>
       <input type="search" wire:model.live="search" placeholder="Buscar por clave o nombre de la carrera..." class="w-full border-0 outline-none bg-transparent text-[#253146] text-[13px] font-medium">
     </div>
-    <button type="button" wire:click="abrirModalCrear"
-      class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
-      <i data-lucide="plus" class="w-4 h-4"></i>
-      Nueva Carrera
-    </button>
+    @if($puedeCrear)
+      <button type="button" wire:click="abrirModalCrear"
+        class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Nueva Carrera
+      </button>
+    @endif
   </div>
 
   <!-- Mensajes flash (se ocultan automáticamente en 3s) -->
@@ -49,11 +51,13 @@
           </div>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <button type="button" wire:click="abrirModalEditar({{ $carreraDetalle['id_carrera'] }})"
-            class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
-            <i data-lucide="pencil" class="w-4 h-4"></i>
-            Editar información
-          </button>
+          @if($puedeEditar)
+            <button type="button" wire:click="abrirModalEditar({{ $carreraDetalle['id_carrera'] }})"
+              class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+              <i data-lucide="pencil" class="w-4 h-4"></i>
+              Editar información
+            </button>
+          @endif
           <button type="button" wire:click="cerrarDetalleCarrera"
             class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
             Cerrar
@@ -235,15 +239,12 @@
               </td>
               <td class="px-5 py-4 border-b border-[#f2efed]">
                 <div class="flex gap-1.5">
-                  <button wire:click="abrirModalEditar({{ $carrera['id_carrera'] }})" title="Editar carrera"
-                    class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
-                    <i data-lucide="pencil" class="w-4 h-4"></i>
-                  </button>
-                  <button wire:click="eliminar({{ $carrera['id_carrera'] }})" wire:confirm="¿Eliminar esta carrera?"
-                    title="Eliminar carrera"
-                    class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                  </button>
+                  @if($puedeEditar)
+                    <button wire:click="abrirModalEditar({{ $carrera['id_carrera'] }})" title="Editar carrera"
+                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
+                      <i data-lucide="pencil" class="w-4 h-4"></i>
+                    </button>
+                  @endif
                 </div>
               </td>
             </tr>

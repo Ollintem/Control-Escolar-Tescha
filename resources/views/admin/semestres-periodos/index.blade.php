@@ -13,13 +13,13 @@
         <input type="search" wire:model.live="periodoSearch" placeholder="Buscar por clave o nombre del periodo..." class="w-full border-0 outline-none bg-transparent text-[#253146] text-[13px] font-medium">
       @endif
     </div>
-    @if($tab === 'semestres')
+    @if($tab === 'semestres' && $puedeCrearSemestre)
       <button type="button" wire:click="abrirModalSemestreCrear"
         class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
         <i data-lucide="plus" class="w-4 h-4"></i>
         Nuevo Semestre
       </button>
-    @else
+    @elseif($tab === 'periodos' && $puedeCrearPeriodo)
       <button type="button" wire:click="abrirModalPeriodoCrear"
         class="inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] text-[13px] font-bold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
         <i data-lucide="plus" class="w-4 h-4"></i>
@@ -164,15 +164,19 @@
                 </td>
                 <td class="px-5 py-4 border-b border-[#f2efed]">
                   <div class="flex gap-1.5">
-                    <button wire:click="abrirModalSemestreEditar({{ $sem['id_semestre'] }})" title="Editar semestre"
-                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
-                      <i data-lucide="pencil" class="w-4 h-4"></i>
-                    </button>
-                    <button wire:click="eliminarSemestre({{ $sem['id_semestre'] }})" wire:confirm="¿Eliminar este semestre?"
-                      title="Eliminar semestre"
-                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
-                      <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    @if($puedeEditarSemestre)
+                      <button wire:click="abrirModalSemestreEditar({{ $sem['id_semestre'] }})" title="Editar semestre"
+                        class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
+                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                      </button>
+                    @endif
+                    @if($puedeEliminarSemestre)
+                      <button wire:click="eliminarSemestre({{ $sem['id_semestre'] }})" wire:confirm="¿Eliminar este semestre?"
+                        title="Eliminar semestre"
+                        class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                      </button>
+                    @endif
                   </div>
                 </td>
               </tr>
@@ -240,11 +244,13 @@
               class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
               Cancelar
             </button>
-            <button type="button" wire:click="guardarSemestre"
-              class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
-              <i data-lucide="check" class="w-4 h-4"></i>
-              {{ $editingSemestreId ? 'Guardar cambios' : 'Registrar semestre' }}
-            </button>
+            @if($editingSemestreId ? $puedeEditarSemestre : $puedeCrearSemestre)
+              <button type="button" wire:click="guardarSemestre"
+                class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                {{ $editingSemestreId ? 'Guardar cambios' : 'Registrar semestre' }}
+              </button>
+            @endif
           </div>
         </div>
       </div>
@@ -375,15 +381,12 @@
                 </td>
                 <td class="px-5 py-4 border-b border-[#f2efed]">
                   <div class="flex gap-1.5">
-                    <button wire:click="abrirModalPeriodoEditar({{ $per['id_periodo'] }})" title="Editar periodo"
-                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
-                      <i data-lucide="pencil" class="w-4 h-4"></i>
-                    </button>
-                    <button wire:click="eliminarPeriodo({{ $per['id_periodo'] }})" wire:confirm="¿Eliminar este periodo?"
-                      title="Eliminar periodo"
-                      class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 hover:scale-110">
-                      <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    @if($puedeEditarPeriodo)
+                      <button wire:click="abrirModalPeriodoEditar({{ $per['id_periodo'] }})" title="Editar periodo"
+                        class="grid place-items-center w-[34px] h-[34px] rounded-[9px] border border-[#e9e5e2] text-[#687488] bg-white transition-all duration-200 hover:text-brand-600 hover:border-[#d9bcc7] hover:bg-[#fff9fb] hover:scale-110">
+                        <i data-lucide="pencil" class="w-4 h-4"></i>
+                      </button>
+                    @endif
                   </div>
                 </td>
               </tr>
@@ -404,14 +407,14 @@
 
     <!-- Modal Crear / Editar Periodo -->
     @if($showModalPeriodo)
-      <div class="fixed inset-0 z-[1000] grid place-items-center p-5 bg-black/55 backdrop-blur-sm" wire:click.self="$set('showModalPeriodo', false)">
+      <div class="fixed inset-0 z-[1000] grid place-items-center p-5 bg-black/55 backdrop-blur-sm" wire:click.self="cerrarModalPeriodo">
         <div class="w-full max-w-[560px] max-h-[calc(100vh-40px)] overflow-auto rounded-[20px] bg-white shadow-2xl">
           <div class="flex items-start justify-between gap-4 px-6 pt-6 pb-4 border-b border-[#eeeae8]">
             <div>
               <h2 class="m-0 text-[#283348] text-lg">{{ $editingPeriodoId ? 'Editar periodo' : 'Nuevo periodo' }}</h2>
               <p class="mt-1 mb-0 text-[#919aaa] text-[11px]">{{ $editingPeriodoId ? 'Actualiza la información del periodo seleccionado.' : 'Registra un nuevo periodo escolar en el sistema TESCHA.' }}</p>
             </div>
-            <button type="button" wire:click="$set('showModalPeriodo', false)"
+            <button type="button" wire:click="cerrarModalPeriodo"
               class="grid place-items-center w-[34px] h-[34px] rounded-[9px] text-[#788395] bg-[#f7f5f3] transition-colors hover:text-brand-700 hover:bg-brand-100">
               <i data-lucide="x" class="w-4 h-4"></i>
             </button>
@@ -460,35 +463,43 @@
 
             {{-- Advertencia: solo puede existir UN periodo activo a la vez.
                  Se muestra ANTES de guardar y debe confirmarse explícitamente. --}}
-            @if($periodoActivoEnConflicto)
+            @if($confirmacionCambioActivoPendiente !== null)
               <div class="mt-4 p-3 rounded-[10px] border border-amber-300 bg-amber-50">
                 <div class="flex items-start gap-2 text-[#8a5a12] text-[11px] font-bold">
                   <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-gold-500"></i>
                   <span>
-                    Actualmente el periodo <b>{{ $periodoActivoEnConflicto }}</b> está activo.
+                    Actualmente el periodo <b>{{ $confirmacionCambioActivoPendiente['periodo_activo_clave'] }}</b> está activo.
                     ¿Deseas finalizarlo y activar el nuevo periodo?
                   </span>
                 </div>
-                <label class="mt-2.5 flex items-start gap-2 cursor-pointer">
-                  <input type="checkbox" wire:model="confirmarCambioActivo"
-                    class="w-4 h-4 mt-[1px] rounded border-[#cfc9c5] focus:ring-gold-500/25 shrink-0">
-                  <span class="text-[#8a5a12] text-[11px] font-semibold leading-[1.4]">
-                    Confirmo finalizar el periodo {{ $periodoActivoEnConflicto }} y activar este periodo.
-                  </span>
-                </label>
+                <div class="mt-3 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                  <button type="button" wire:click="cancelarCambioActivo"
+                    class="py-2 px-3 rounded-[9px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-[11px] transition-colors hover:bg-[#faf9f8]">
+                    Cancelar
+                  </button>
+                  @if($confirmacionCambioActivoPendiente['accion'] === 'crear' ? $puedeCrearPeriodo : $puedeEditarPeriodo)
+                    <button type="button" wire:click="confirmarCambioActivo" wire:loading.attr="disabled" wire:target="confirmarCambioActivo"
+                      class="inline-flex items-center justify-center gap-2 py-2 px-3 rounded-[9px] text-white bg-gradient-to-br from-brand-500 to-brand-700 font-bold text-[11px] transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                      <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                      Confirmar activación
+                    </button>
+                  @endif
+                </div>
               </div>
             @endif
           </div>
           <div class="flex justify-end gap-2 px-6 pb-6 pt-2 border-t border-[#eeeae8] mt-2">
-            <button type="button" wire:click="$set('showModalPeriodo', false)"
+            <button type="button" wire:click="cerrarModalPeriodo"
               class="py-2.5 px-4 rounded-[10px] border border-[#e5e1de] text-[#697487] bg-white font-bold text-xs transition-colors hover:bg-[#faf9f8]">
               Cancelar
             </button>
-            <button type="button" wire:click="guardarPeriodo"
-              class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)]">
-              <i data-lucide="check" class="w-4 h-4"></i>
-              {{ $editingPeriodoId ? 'Guardar cambios' : 'Registrar periodo' }}
-            </button>
+            @if($confirmacionCambioActivoPendiente === null)
+              <button type="button" wire:click="guardarPeriodo" wire:loading.attr="disabled" wire:target="guardarPeriodo"
+                class="inline-flex items-center gap-2 py-2.5 px-4 rounded-[11px] text-white bg-gradient-to-br from-brand-500 to-brand-700 shadow-[0_7px_16px_rgba(109,25,56,.18)] font-bold text-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(109,25,56,.23)] disabled:opacity-60 disabled:cursor-not-allowed">
+                <i data-lucide="check" class="w-4 h-4"></i>
+                {{ $editingPeriodoId ? 'Guardar cambios' : 'Registrar periodo' }}
+              </button>
+            @endif
           </div>
         </div>
       </div>
