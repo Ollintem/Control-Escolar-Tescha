@@ -636,6 +636,7 @@ class GestionGrupos extends Component
 
     public function toggleActivo($grupoId): void
     {
+        $this->exigirPermiso('ver');
         $grupo = Grupo::findOrFail($grupoId);
         $this->exigirPermiso($grupo->activo ? 'eliminar' : 'editar');
 
